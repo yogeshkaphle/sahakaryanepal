@@ -1,0 +1,19 @@
+---
+interface Props { title: string; yearBS: string; yearAD: number; type: string; file: string; size?: string; }
+const { title, yearBS, yearAD, type, file, size } = Astro.props;
+---
+<article class="report-row">
+  <h3><a href={file}>{title}</a></h3>
+  <p class="year">{yearBS} · {yearAD}</p>
+  <span class="type">{type}</span>
+  <a class="download" href={file}>PDF{size ? `, ${size}` : ''}</a>
+</article>
+<style>
+  .report-row { align-items: center; border-block-start: 1px solid var(--color-stone); display: grid; gap: 0.75rem; padding: 1rem 0; }
+  h3 { font-size: 1rem; font-weight: var(--weight-medium); line-height: 1.4; }
+  a { color: var(--color-deep-blue); text-underline-offset: 0.18em; }
+  .year, .download { color: var(--color-slate); font-size: 0.85rem; font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); }
+  .type { border: 1px solid var(--color-hill-green); border-radius: 999px; color: var(--color-hill-green); font-size: 0.8125rem; font-weight: 600; padding: 0.35rem 0.65rem; width: fit-content; }
+  .download { min-height: 44px; display: inline-flex; align-items: center; }
+  @media (min-width: 760px) { .report-row { grid-template-columns: minmax(18rem, 1fr) 9rem 12rem 8rem; } }
+</style>

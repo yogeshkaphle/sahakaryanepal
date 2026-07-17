@@ -1,0 +1,90 @@
+---
+// PREVIEW ONLY: delete before launch. Uses fake sample props only.
+import AnchorStat from '../components/AnchorStat.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Button from '../components/Button.astro';
+import Figure from '../components/Figure.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ProjectRow from '../components/ProjectRow.astro';
+import ProvenanceLine from '../components/ProvenanceLine.astro';
+import ReportRow from '../components/ReportRow.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import SectorTag from '../components/SectorTag.astro';
+import StatusPill from '../components/StatusPill.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const footerLinks = [
+  { label: 'About', href: '/about/' },
+  { label: 'Our Work', href: '/our-work/' },
+  { label: 'Impact', href: '/impact/' },
+  { label: 'Reports', href: '/reports/' },
+  { label: 'Partners', href: '/partners/' },
+  { label: 'Contact', href: '/contact/' },
+];
+---
+<BaseLayout
+  title="Component preview"
+  description="Preview-only component page with fake sample props."
+  footerRegistrations={['Reg. 000', 'SWC 00000', 'PAN 000000000']}
+  footerLinks={footerLinks}
+  footerContact={['Sample address line', 'sample@example.org', '+000-000-000000']}
+>
+  <div class="preview-shell">
+    <p class="preview-note">Preview-only route. Fake sample props; delete before launch.</p>
+
+    <section>
+      <SectionHeader eyebrow="Component" title="Section header" />
+    </section>
+
+    <section>
+      <h2>Buttons</h2>
+      <div class="cluster"><Button href="#" label="Primary action" variant="primary" /><Button href="#" label="Secondary action" variant="secondary" /></div>
+    </section>
+
+    <section>
+      <h2>Provenance, tags, status</h2>
+      <ProvenanceLine items={['Donor Name', 'Sample RM', '2020–22', 'NPR 0.0M']} />
+      <div class="cluster"><SectorTag label="Sample sector" /><StatusPill status="ongoing" /><StatusPill status="completed" /></div>
+    </section>
+
+    <section>
+      <h2>Anchor stat</h2>
+      <AnchorStat figure="123,456" label="Sample people reached label" provenance={['Sample source', '2020–22']} />
+    </section>
+
+    <section>
+      <h2>Figure</h2>
+      <Figure src={null} alt="Sample image unavailable" caption="Sample caption · 2020–22" ratio="16:9" />
+    </section>
+
+    <section>
+      <h2>Project cards</h2>
+      <div class="grid">
+        <ProjectCard title="Sample project title" summary="Sample one-line summary for review only." sectors={['Sample sector']} provenance={['Donor Name', 'Sample RM', '2020–22']} status="ongoing" href="#" featured />
+        <ProjectCard title="Sample project title" summary="Sample one-line summary for review only." sectors={['Sample sector']} provenance={['Donor Name', 'Sample RM', '2020–22']} status="completed" href="#" />
+      </div>
+      <ProjectRow title="Sample archive project title" provenance={['Donor Name', '2020–22']} href="#" />
+    </section>
+
+    <section>
+      <h2>Reports and breadcrumbs</h2>
+      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Preview', href: '/_preview/' }]} />
+      <ReportRow title="Sample report title" yearBS="2080" yearAD={2023} type="annual-report" file="#" size="2.1MB" />
+    </section>
+
+    <section>
+      <h2>Devanagari utility</h2>
+      <p><span>Mixed script sample </span><span class="deva">नेपाली नमुना पाठ</span></p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .preview-shell { display: grid; gap: 3rem; margin-inline: auto; max-width: 1200px; padding: clamp(4rem, 8vw, 6rem) 1rem; }
+  .preview-note { background: var(--color-stone); color: var(--color-slate); font-size: 0.85rem; font-weight: var(--weight-medium); padding: 1rem; }
+  section { display: grid; gap: 1rem; }
+  h2 { color: var(--color-ink); font-size: 1.25rem; }
+  .cluster { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .grid { display: grid; gap: 1rem; }
+  @media (min-width: 760px) { .preview-shell { padding-inline: 1.5rem; } .grid { grid-template-columns: 1fr 1fr; } }
+</style>
