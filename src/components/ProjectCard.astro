@@ -14,13 +14,14 @@ const { title, summary, sectors, provenance, status, href, featured = false, ima
     <h3><a href={href}>{title}</a></h3>
     <p class="summary">{summary}</p>
     <ProvenanceLine items={provenance} />
-    <StatusPill status={status} />
+    <div class="status"><StatusPill status={status} /></div>
   </div>
 </article>
 <style>
   .project-card { background: var(--color-white); border: 1px solid var(--color-stone); border-radius: 1rem; padding: 1rem; }
   .featured { display: grid; gap: 1.5rem; }
   .body { display: grid; gap: 0.75rem; }
+  .status { justify-self: start; }
   .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.25; }
   .featured h3 { font-size: clamp(1.5rem, 4vw, 2rem); }
