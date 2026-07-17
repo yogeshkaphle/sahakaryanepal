@@ -10,7 +10,8 @@ import AnchorStat from '../components/AnchorStat.astro';
 import Button from '../components/Button.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import ReportRow from '../components/ReportRow.astro';
-import governance from '../data/governance.json';
+import impact from '../data/impact.json';
+import org from '../data/org.json';
 
 // --- Sectors (Programs) — sorted by their authored order ---
 const sectors = (await getCollection('sectors')).sort((a, b) => a.data.order - b.data.order);
@@ -54,14 +55,26 @@ const provenanceFor = (d: (typeof featured)[number]['data']) =>
     (x): x is string => Boolean(x),
   );
 
-// Footer — registration numbers are org-provided (home brief §7). Contact block
-// is [NEEDS ORG]: no address/email/phone in source records yet — left empty.
-const footerRegistrations = [
-  'Reg. 363',
-  'SWC 21014',
-  'PAN 301753065',
-  'DUNS 557778269',
-  'EuropeAid NP-2022-AIY-1708192319',
+// Registration + contact — all from src/data/org.json (org records).
+const reg = org.registration;
+const registrationItems = [
+  `Reg. ${reg.daoSindhuli}`,
+  `SWC ${reg.swc}`,
+  `NGO Fed. ${reg.ngoFederation}`,
+  `PAN ${reg.pan}`,
+  `DUNS ${reg.duns}`,
+  `NCAGE ${reg.ncage}`,
+  `EuropeAid ${reg.europeAidPador}`,
+];
+const registrationLine = registrationItems.join(' · ');
+const auditDate = org.governanceDates.recentAudit;
+// [NEEDS ORG] org.json emailNote: gmail is on-record but an org-domain email
+// reads better to donors — confirm before launch.
+const footerContact = [
+  org.contact.address,
+  org.contact.tel.join(' · '),
+  org.contact.email,
+  org.contact.website,
 ];
 const footerLinks = [
   { label: 'About', href: '/about' },
@@ -76,8 +89,9 @@ const footerLinks = [
 <BaseLayout
   title="Sahakarya Nepal — twenty years of development work in Sindhuli"
   description="Sahakarya Nepal is a female-led development organization working with marginalized communities across Sindhuli, Nepal since 2004 — on livelihoods, health, education, disaster resilience and good governance."
-  footerRegistrations={footerRegistrations}
+  footerRegistrations={registrationItems}
   footerLinks={footerLinks}
+  footerContact={footerContact}
 >
   {/* 1. HERO — record-panel pattern (design system §6). One marigold moment: the primary CTA. */}
   <section class="hero band-white">
@@ -91,8 +105,9 @@ const footerLinks = [
           disaster resilience and good governance.
         </p>
         <div class="cta-row">
-          <Button href="/partner-with-us" label="Partner with us" variant="primary" />
-          <Button href="/projects" label="See our projects" variant="secondary" />
+          {/* Deep Blue solid, not marigold — the only marigold in this viewport
+              is the nav's "Partner with us" CTA (one accent per view). */}
+          <Button href="/projects" label="See our projects" variant="secondary-solid" />
         </div>
       </div>
 
@@ -164,25 +179,22 @@ const footerLinks = [
     </div>
   </section>
 
-  {/* 5. IMPACT — figures NOT in source records. Rendered as a flagged placeholder,
-       never fabricated. See report for the exact [VERIFY]/[NEEDS ORG] list. */}
+  {/* 5. IMPACT — all figures verbatim from src/data/impact.json (org profile 2025). */}
   <section class="band-white">
     <div class="wrap">
       <SectionHeader eyebrow="IMPACT" title="What the work adds up to" />
-      <p class="impact-note">
-        Aggregate impact figures are being finalized against Sahakarya Nepal's own records
-        before they appear here. We publish a number only when it traces to a source.
-      </p>
-      <div class="impact-grid">
-        {/* [VERIFY figure] children supported in education (candidate: 11,674 — not in source) */}
-        <AnchorStat figure="—" label="children supported in education" provenance={['figure pending org confirmation']} />
-        {/* [VERIFY figure] cooperative share members (candidate: 4,879 — not in source) */}
-        <AnchorStat figure="—" label="cooperative share members" provenance={['figure pending org confirmation']} />
-        {/* [VERIFY figure] households reached with COVID relief (candidate: 1,204 — not in source) */}
-        <AnchorStat figure="—" label="households reached with COVID relief" provenance={['figure pending org confirmation']} />
+      <div class="impact-headline">
+        <AnchorStat
+          figure={impact.headline.figure}
+          label={impact.headline.label}
+          provenance={[impact.headline.provenance]}
+        />
       </div>
-      {/* [NEEDS ORG: source/calculation for the "~300,000 people reached" aggregate].
-          Not shipped until sourced — better no number than an unsourced one. */}
+      <div class="impact-grid">
+        {impact.achievements.map((a) => (
+          <AnchorStat figure={a.figure} label={a.label} provenance={[a.provenance]} />
+        ))}
+      </div>
       <div class="more">
         <Button href="/impact" label="See our full impact" variant="secondary" />
       </div>
@@ -211,11 +223,8 @@ const footerLinks = [
   <section class="band-white">
     <div class="wrap">
       <SectionHeader eyebrow="TRANSPARENCY" title="Registered, audited, on the record" />
-      <p class="reg-line">
-        Reg. 363 · SWC 21014 · PAN 301753065 · DUNS 557778269 · EuropeAid NP-2022-AIY-1708192319
-      </p>
-      {/* [VERIFY] most recent audit date */}
-      <p class="reg-line">Most recent audit: 2024-10-16 (2082/06/30)</p>
+      <p class="reg-line">{registrationLine}</p>
+      <p class="reg-line">Most recent audit: {auditDate}</p>
       <div class="reports">
         {reports.map((r) => (
           <ReportRow
@@ -312,7 +321,7 @@ const footerLinks = [
   }
 
   /* 5. Impact */
-  .impact-note { color: var(--color-slate); line-height: 1.6; margin-top: 1rem; max-width: 68ch; }
+  .impact-headline { margin-top: 2rem; }
 
   /* 6. Partners */
   .partner-groups { display: grid; gap: 2rem; margin-top: 2rem; }

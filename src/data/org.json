@@ -1,0 +1,26 @@
+{
+  "name": "Sahakarya Nepal",
+  "locality": "Sindhuli",
+  "founded": "2004",
+  "contact": {
+    "address": "Kamalamai Municipality–6, Rammadi, Sindhuli, Nepal",
+    "tel": ["+977-047-520863", "+977-047-521188"],
+    "email": "sahakarya2061@gmail.com",
+    "website": "https://www.sahakaryasindhuli.org.np",
+    "facebook": "https://www.facebook.com/Sahakaryasindhuli"
+  },
+  "registration": {
+    "daoSindhuli": "363",
+    "swc": "21014",
+    "ngoFederation": "CR-SIN-68",
+    "pan": "301753065",
+    "duns": "557778269",
+    "ncage": "SHNW8",
+    "europeAidPador": "NP-2022-AIY-1708192319"
+  },
+  "governanceDates": {
+    "recentAudit": "2024-10-16 (2082/06/30 BS)",
+    "lastGeneralAssembly": "2023-01-12 (2080/09/27 BS)"
+  },
+  "emailNote": "[NEEDS ORG] gmail address is on-record but an org-domain email (e.g. info@sahakaryasindhuli.org.np) reads better to donors. Confirm before launch."
+}
