@@ -1,0 +1,21 @@
+---
+interface Props { label: string; href?: string; }
+const { label, href } = Astro.props;
+---
+{href ? <a class="sector-tag" href={href}>{label}</a> : <span class="sector-tag">{label}</span>}
+<style>
+  .sector-tag {
+    background: color-mix(in srgb, var(--color-hill-green) 12%, var(--color-white));
+    border: 1px solid color-mix(in srgb, var(--color-hill-green) 35%, var(--color-white));
+    border-radius: 999px;
+    color: var(--color-hill-green);
+    display: inline-flex;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 0.35rem 0.65rem;
+    text-decoration: none;
+  }
+  a.sector-tag { min-height: 44px; align-items: center; }
+  a.sector-tag:hover { background: var(--color-stone); }
+</style>

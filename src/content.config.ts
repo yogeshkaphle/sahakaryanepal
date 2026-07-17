@@ -2,7 +2,7 @@ import { defineCollection, reference, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
 const projects = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/projects' }),
+  loader: glob({ pattern: ['**/*.{md,mdx}', '!**/_*'], base: './src/content/projects' }),
   schema: ({ image }) => z.object({
     title: z.string(),
     status: z.enum(['ongoing', 'completed']),
@@ -24,7 +24,7 @@ const projects = defineCollection({
 });
 
 const sectors = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/sectors' }),
+  loader: glob({ pattern: ['**/*.{md,mdx}', '!**/_*'], base: './src/content/sectors' }),
   schema: ({ image }) => z.object({
     title: z.string(),
     order: z.number().default(0),
@@ -35,7 +35,7 @@ const sectors = defineCollection({
 });
 
 const partners = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx,json}', base: './src/content/partners' }),
+  loader: glob({ pattern: ['**/*.{md,mdx,json}', '!**/_*'], base: './src/content/partners' }),
   schema: ({ image }) => z.object({
     name: z.string(),
     type: z.enum(['multilateral', 'bilateral', 'ingo', 'government', 'local-government', 'other']),
@@ -47,7 +47,7 @@ const partners = defineCollection({
 });
 
 const stories = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/stories' }),
+  loader: glob({ pattern: ['**/*.{md,mdx}', '!**/_*'], base: './src/content/stories' }),
   schema: ({ image }) => z.object({
     person: z.string(),
     place: z.string(),
@@ -60,7 +60,7 @@ const stories = defineCollection({
 });
 
 const reports = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx,json}', base: './src/content/reports' }),
+  loader: glob({ pattern: ['**/*.{md,mdx,json}', '!**/_*'], base: './src/content/reports' }),
   schema: z.object({
     title: z.string(),
     yearBS: z.string(),
@@ -73,7 +73,7 @@ const reports = defineCollection({
 });
 
 const policies = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx,json}', base: './src/content/policies' }),
+  loader: glob({ pattern: ['**/*.{md,mdx,json}', '!**/_*'], base: './src/content/policies' }),
   schema: z.object({
     name: z.string(),
     category: z.enum(['financial', 'hr', 'safeguarding', 'governance', 'operational']),

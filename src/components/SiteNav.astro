@@ -1,0 +1,47 @@
+---
+import Button from './Button.astro';
+const items = [
+  { label: 'About', href: '/about/' },
+  { label: 'Our Work', href: '/our-work/' },
+  { label: 'Impact', href: '/impact/' },
+  { label: 'Reports', href: '/reports/' },
+  { label: 'Partners', href: '/partners/' },
+  { label: 'Contact', href: '/contact/' },
+];
+---
+<nav class="site-nav" aria-label="Primary">
+  <a class="brand" href="/">Sahakarya Nepal</a>
+  <button class="menu-button" type="button" aria-expanded="false" aria-controls="primary-menu">Menu</button>
+  <div class="menu" id="primary-menu" data-menu>
+    <ul>{items.map((item) => <li><a href={item.href}>{item.label}</a></li>)}</ul>
+    <Button href="/contact/" label="Partner with us" variant="primary" />
+    <div class="language" aria-label="Language switcher / भाषा छनोट">
+      <a href="/" lang="en">EN</a>
+      <a href="/ne/" lang="ne">ने</a>
+    </div>
+  </div>
+</nav>
+<script>
+  const nav = document.querySelector('.site-nav');
+  const button = nav?.querySelector('.menu-button');
+  const menu = nav?.querySelector('[data-menu]');
+  button?.addEventListener('click', () => {
+    const isOpen = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!isOpen));
+    menu?.toggleAttribute('data-open', !isOpen);
+  });
+</script>
+<style>
+  .site-nav { align-items: center; background: var(--color-white); border-block-end: 1px solid var(--color-stone); display: flex; gap: 1rem; justify-content: space-between; min-height: 72px; padding: 0 1rem; position: sticky; top: 0; z-index: 100; }
+  .brand { color: var(--color-deep-blue); font-weight: var(--weight-heading); text-decoration: none; }
+  .menu-button { background: transparent; border: 1px solid var(--color-deep-blue); border-radius: 0.75rem; color: var(--color-deep-blue); font: inherit; min-height: 44px; padding: 0.5rem 0.85rem; }
+  .menu { background: var(--color-white); display: none; inset: 72px 0 0; padding: 1rem; position: fixed; }
+  .menu[data-open] { display: grid; align-content: start; gap: 1rem; }
+  ul { display: grid; gap: 0.5rem; list-style: none; padding: 0; }
+  a { color: var(--color-deep-blue); min-height: 44px; display: inline-flex; align-items: center; text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
+  .language { display: flex; gap: 0.5rem; }
+  .language a { border: 1px solid var(--color-stone); border-radius: 999px; padding: 0.25rem 0.75rem; text-decoration: none; }
+  @media (prefers-reduced-motion: no-preference) { a, .menu-button { transition: background-color 160ms ease, border-color 160ms ease; } }
+  a:hover, .menu-button:hover, .language a:hover { background: var(--color-stone); }
+  @media (min-width: 900px) { .site-nav { padding-inline: 1.5rem; } .menu-button { display: none; } .menu { align-items: center; display: flex; gap: 1rem; inset: auto; padding: 0; position: static; } ul { display: flex; gap: 0.75rem; } }
+</style>

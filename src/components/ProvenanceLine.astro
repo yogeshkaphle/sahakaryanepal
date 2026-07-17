@@ -1,0 +1,15 @@
+---
+interface Props { items: string[]; }
+const { items } = Astro.props;
+---
+{items.length > 0 && <p class="provenance">{items.join(' · ')}</p>}
+
+<style>
+  .provenance {
+    color: var(--color-slate);
+    font-size: 0.85rem;
+    font-weight: var(--weight-medium);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+</style>

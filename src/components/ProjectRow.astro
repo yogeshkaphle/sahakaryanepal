@@ -1,0 +1,14 @@
+---
+import ProvenanceLine from './ProvenanceLine.astro';
+interface Props { title: string; provenance: string[]; href: string; }
+const { title, provenance, href } = Astro.props;
+---
+<article class="project-row">
+  <h3><a href={href}>{title}</a></h3>
+  <ProvenanceLine items={provenance} />
+</article>
+<style>
+  .project-row { border-block-start: 1px solid var(--color-stone); display: grid; gap: 0.35rem; padding: 1rem 0; }
+  h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.25; }
+  a { color: var(--color-deep-blue); text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
+</style>

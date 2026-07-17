@@ -1,14 +1,28 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteNav from '../components/SiteNav.astro';
 
+interface FooterLink { label: string; href: string; }
 interface Props {
   title: string;
   description: string;
   image?: string;
   lang?: 'en' | 'ne';
+  footerRegistrations?: string[];
+  footerLinks?: FooterLink[];
+  footerContact?: string[];
 }
 
-const { title, description, image, lang = 'en' } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  lang = 'en',
+  footerRegistrations = [],
+  footerLinks = [],
+  footerContact = [],
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -17,6 +31,15 @@ const { title, description, image, lang = 'en' } = Astro.props;
     <BaseHead title={title} description={description} image={image} lang={lang} />
   </head>
   <body>
-    <slot />
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header>
+      <SiteNav />
+    </header>
+    <main id="main-content">
+      <slot />
+    </main>
+    <SiteFooter registrations={footerRegistrations} sitemapLinks={footerLinks} contact={footerContact}>
+      <slot name="donor-logos" slot="donor-logos" />
+    </SiteFooter>
   </body>
 </html>

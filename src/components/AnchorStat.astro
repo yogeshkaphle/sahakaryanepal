@@ -1,0 +1,16 @@
+---
+import ProvenanceLine from './ProvenanceLine.astro';
+interface Props { figure: string; label: string; provenance?: string[]; }
+const { figure, label, provenance = [] } = Astro.props;
+---
+<div class="anchor-stat">
+  <p class="figure">{figure}</p>
+  <p class="label">{label}</p>
+  <ProvenanceLine items={provenance} />
+</div>
+<style>
+  .anchor-stat { max-width: 68ch; }
+  .figure { color: var(--color-deep-blue); font-size: clamp(2.75rem, 8vw, 4rem); font-variant-numeric: tabular-nums; font-weight: var(--weight-heading); letter-spacing: -0.01em; line-height: 1; }
+  .label { color: var(--color-slate); font-size: 1rem; line-height: 1.6; margin-top: 0.5rem; }
+  .anchor-stat :global(.provenance) { margin-top: 0.5rem; }
+</style>
