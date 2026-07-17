@@ -4,7 +4,7 @@ import Figure from './Figure.astro';
 import ProvenanceLine from './ProvenanceLine.astro';
 import SectorTag from './SectorTag.astro';
 import StatusPill from './StatusPill.astro';
-interface Props { title: string; summary: string; sectors: string[]; provenance: string[]; status: 'ongoing' | 'completed'; href: string; featured?: boolean; image?: ImageMetadata | string | null; }
+interface Props { title: string; summary: string; sectors: string[]; provenance: string[]; status: 'ongoing' | 'completed'; href: string; featured?: boolean; image?: ImageMetadata | null; }
 const { title, summary, sectors, provenance, status, href, featured = false, image = null } = Astro.props;
 ---
 <article class:list={['project-card', { featured }]}>

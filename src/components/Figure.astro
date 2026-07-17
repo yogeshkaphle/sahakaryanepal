@@ -1,12 +1,12 @@
 ---
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-interface Props { src?: ImageMetadata | string | null; alt: string; caption?: string; ratio?: '16:9' | '4:3'; }
+interface Props { src?: ImageMetadata | null; alt: string; caption?: string; ratio?: '16:9' | '4:3'; }
 const { src, alt, caption, ratio = '16:9' } = Astro.props;
 const ratioValue = ratio === '4:3' ? '4 / 3' : '16 / 9';
 ---
 <figure class="figure" style={`--ratio:${ratioValue}`}>
-  {src ? <Image class="image" src={src} alt={alt} widths={[320, 480, 600, 900, 1180]} sizes="(min-width: 720px) 600px, calc(100vw - 32px)" formats={['avif', 'webp']} loading="lazy" /> : <div class="fallback" role="img" aria-label={alt}>{alt}</div>}
+  {src ? <Picture class="image" src={src} alt={alt} widths={[320, 480, 600, 900, 1180]} sizes="(min-width: 720px) 600px, calc(100vw - 32px)" formats={['avif', 'webp']} loading="lazy" /> : <div class="fallback" role="img" aria-label={alt}>{alt}</div>}
   {caption && <figcaption>{caption}</figcaption>}
 </figure>
 <style>

@@ -1,0 +1,89 @@
+{
+  "executiveDirector": {
+    "name": "Rashmi Subedi",
+    "qualification": "M.Sc. Ag.",
+    "experienceYears": 12,
+    "expertise": "Program development and implementation, health and nutrition, livelihood, WASH, M&E, agro promotion and research"
+  },
+  "executiveCommittee": [
+    {
+      "name": "Ms. Siramala Tamang",
+      "role": "Chairperson",
+      "gender": "F",
+      "qualification": "Master in Sociology"
+    },
+    {
+      "name": "Mr. Sanjib Sunuwar",
+      "role": "Vice-Chairperson",
+      "gender": "M",
+      "qualification": "M.Sc. in Agriculture"
+    },
+    {
+      "name": "Ms. Khem Kumari Karki",
+      "role": "Secretary",
+      "gender": "F",
+      "qualification": "Master in Education"
+    },
+    {
+      "name": "Ms. Babita Adhikari",
+      "role": "Treasurer",
+      "gender": "F",
+      "qualification": "B.B.S."
+    },
+    {
+      "name": "Ms. Apsara Hayu",
+      "role": "Member",
+      "gender": "F",
+      "qualification": "I.Sc. Agriculture"
+    },
+    {
+      "name": "Ms. Anar Dhami Danuwar",
+      "role": "Member",
+      "gender": "F",
+      "qualification": "10+2 Education"
+    },
+    {
+      "name": "Ms. Manju Kumari B.K.",
+      "role": "Member",
+      "gender": "F",
+      "qualification": "B.A."
+    },
+    {
+      "name": "Ms. Jwala Subedi",
+      "role": "Member",
+      "gender": "F",
+      "qualification": "Master in Public Health"
+    },
+    {
+      "name": "Ms. Apsara Gautam",
+      "role": "Member",
+      "gender": "F",
+      "qualification": "10+2"
+    }
+  ],
+  "advisors": [
+    {
+      "name": "Mr. Khet Raj Adhikari",
+      "focus": "Organization management, cooperative management, enterprise development"
+    },
+    {
+      "name": "Dr. Bhagwan Dahal",
+      "focus": "Wildlife and community forestry"
+    },
+    {
+      "name": "Dr. Tek Prasad Gotame",
+      "focus": "Horticulture science"
+    }
+  ],
+  "composition": {
+    "executiveCommittee": 9,
+    "femaleMembers": 8,
+    "maleMembers": 1,
+    "totalMembers": 51,
+    "lifeMembers": 10,
+    "generalMembers": 41,
+    "femaleTotal": 29,
+    "maleTotal": 22
+  },
+  "note": "Female-led: 8 of 9 executive committee members and the Executive Director are women. Chair, Secretary and Treasurer are all women."
+}
