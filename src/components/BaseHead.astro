@@ -1,0 +1,78 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  lang?: 'en' | 'ne';
+}
+
+const { title, description, image, lang = 'en' } = Astro.props;
+const site = Astro.site ?? new URL('https://www.sahakaryasindhuli.org.np');
+const canonicalUrl = new URL(Astro.url.pathname, site);
+const imageUrl = image ? new URL(image, site) : undefined;
+
+const translatedPathnames = new Set<string>();
+const localePaths = {
+  en: (pathname: string) => pathname.replace(/^\/ne(?=\/|$)/, '') || '/',
+  ne: (pathname: string) => pathname.startsWith('/ne/') || pathname === '/ne' ? pathname : `/ne${pathname}`,
+};
+
+const alternateLinks = (['en', 'ne'] as const)
+  .map((locale) => ({
+    lang: locale,
+    pathname: localePaths[locale](Astro.url.pathname),
+  }))
+  .filter((link) => translatedPathnames.has(link.pathname))
+  .map((link) => ({
+    lang: link.lang,
+    href: new URL(link.pathname, site).toString(),
+  }));
+
+const ngoJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'NGO',
+  name: 'Sahakarya Nepal',
+  alternateName: 'Sahakarya Nepal, Sindhuli',
+  url: 'https://www.sahakaryasindhuli.org.np',
+  foundingDate: '2004-10-10',
+  email: 'sahakarya2061@gmail.com',
+  telephone: '+977-047-520863',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Kamalamai Municipality-6, Rammadi',
+    addressLocality: 'Sindhuli',
+    addressCountry: 'NP',
+  },
+  areaServed: 'Sindhuli District, Nepal',
+  sameAs: ['https://www.facebook.com/Sahakaryasindhuli'],
+  identifier: [
+    { '@type': 'PropertyValue', propertyID: 'DAO Sindhuli Reg.', value: '363' },
+    { '@type': 'PropertyValue', propertyID: 'Social Welfare Council', value: '21014' },
+    { '@type': 'PropertyValue', propertyID: 'NGO Federation', value: 'CR-SIN-68' },
+    { '@type': 'PropertyValue', propertyID: 'PAN', value: '301753065' },
+    { '@type': 'PropertyValue', propertyID: 'DUNS', value: '557778269' },
+    { '@type': 'PropertyValue', propertyID: 'NCAGE', value: 'SHNW8' },
+    { '@type': 'PropertyValue', propertyID: 'EuropeAid PADOR', value: 'NP-2022-AIY-1708192319' },
+  ],
+};
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl.toString()} />
+{alternateLinks.map((link) => <link rel="alternate" hreflang={link.lang} href={link.href} />)}
+<meta property="og:type" content="website" />
+<meta property="og:locale" content={lang === 'ne' ? 'ne_NP' : 'en_US'} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl.toString()} />
+{imageUrl && <meta property="og:image" content={imageUrl.toString()} />}
+<meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{imageUrl && <meta name="twitter:image" content={imageUrl.toString()} />}
+<script type="application/ld+json" set:html={JSON.stringify(ngoJsonLd)} />
