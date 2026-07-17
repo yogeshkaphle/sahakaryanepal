@@ -1,0 +1,41 @@
+---
+interface Props { variant?: 'primary' | 'secondary'; href?: string; label: string; }
+const { variant = 'primary', href, label } = Astro.props;
+const className = `button ${variant}`;
+---
+{href ? <a class={className} href={href}>{label}</a> : <button class={className} type="button">{label}</button>}
+
+<style>
+  .button {
+    align-items: center;
+    border: 1px solid var(--color-deep-blue);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: var(--weight-medium);
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+  }
+
+  .primary {
+    background: var(--color-deep-marigold);
+    border-color: var(--color-deep-marigold);
+    color: var(--color-white);
+  }
+
+  .secondary {
+    background: transparent;
+    color: var(--color-deep-blue);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .button { transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
+  }
+
+  .primary:hover { background: var(--color-ink); border-color: var(--color-ink); }
+  .secondary:hover { background: var(--color-stone); }
+</style>

@@ -1,0 +1,36 @@
+---
+interface FooterLink { label: string; href: string; }
+interface Props { registrations?: string[]; sitemapLinks?: FooterLink[]; contact?: string[]; }
+const { registrations = [], sitemapLinks = [], contact = [] } = Astro.props;
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <section aria-label="Registration numbers">
+      <h2>Registration</h2>
+      <p>{registrations.join(' · ')}</p>
+    </section>
+    <nav aria-label="Footer sitemap">
+      <h2>Sitemap</h2>
+      <ul>{sitemapLinks.map((link) => <li><a href={link.href}>{link.label}</a></li>)}</ul>
+    </nav>
+    <section aria-label="Donor logos">
+      <h2>Donors</h2>
+      <div class="logos"><slot name="donor-logos" /></div>
+    </section>
+    <section aria-label="Contact">
+      <h2>Contact</h2>
+      <address>{contact.map((item) => <span>{item}</span>)}</address>
+    </section>
+  </div>
+</footer>
+<style>
+  .site-footer { background: var(--color-deep-blue); color: var(--color-stone); padding: clamp(4rem, 8vw, 6rem) 1rem; }
+  .wrap { display: grid; gap: 2rem; margin-inline: auto; max-width: 1200px; }
+  h2 { color: var(--color-white); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; line-height: 1.4; text-transform: uppercase; }
+  p, address { color: var(--color-stone); font-size: 0.85rem; font-style: normal; font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); line-height: 1.6; margin-top: 0.75rem; }
+  address { display: grid; gap: 0.35rem; }
+  ul { display: grid; gap: 0.5rem; list-style: none; margin-top: 0.75rem; padding: 0; }
+  a { color: var(--color-white); min-height: 44px; display: inline-flex; align-items: center; text-underline-offset: 0.18em; }
+  .logos { margin-top: 0.75rem; }
+  @media (min-width: 760px) { .site-footer { padding-inline: 1.5rem; } .wrap { grid-template-columns: repeat(4, 1fr); } }
+</style>

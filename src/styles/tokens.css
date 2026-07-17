@@ -1,0 +1,19 @@
+:root {
+  /* Palette (refined for web, WCAG-checked) */
+  --color-deep-blue: #16386E;     /* primary: structure, headers, links, trust */
+  --color-hill-green: #2F6B45;    /* secondary: the work, programs, land */
+  --color-marigold: #E4832A;      /* accent: people, get-involved (accent only) */
+  --color-deep-marigold: #B85F17; /* CTA variant that carries white text */
+  --color-ink: #1D2430;           /* body + headings (warm near-black) */
+  --color-slate: #55606E;         /* captions, metadata, secondary text */
+  --color-stone: #F5F3EE;         /* subtle section backgrounds */
+  --color-white: #FFFFFF;
+
+  /* Type */
+  --font-sans: 'Noto Sans Variable', 'Noto Sans', system-ui, sans-serif;
+  --font-devanagari: 'Noto Sans Devanagari Variable', 'Noto Sans Devanagari', sans-serif;
+  --line-height-body: 1.6;
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-heading: 700;
+}
