@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import Button from './Button.astro';
+import emblem from '../assets/brand/sahakarya-emblem-badge.png';
 const items = [
   { label: 'About', href: '/about/' },
   { label: 'Our Work', href: '/our-work/' },
@@ -10,7 +12,10 @@ const items = [
 ];
 ---
 <nav class="site-nav" aria-label="Primary">
-  <a class="brand" href="/">Sahakarya Nepal</a>
+  <a class="brand" href="/">
+    <Image src={emblem} alt="" width={44} height={44} loading="eager" />
+    <span>Sahakarya Nepal</span>
+  </a>
   <button class="menu-button" type="button" aria-expanded="false" aria-controls="primary-menu">Menu</button>
   <div class="menu" id="primary-menu" data-menu>
     <ul>{items.map((item) => <li><a href={item.href}>{item.label}</a></li>)}</ul>
@@ -33,7 +38,8 @@ const items = [
 </script>
 <style>
   .site-nav { align-items: center; background: var(--color-white); border-block-end: 1px solid var(--color-stone); display: flex; gap: 1rem; justify-content: space-between; min-height: 72px; padding: 0 1rem; position: sticky; top: 0; z-index: 100; }
-  .brand { color: var(--color-deep-blue); font-weight: var(--weight-heading); text-decoration: none; }
+  .brand { align-items: center; color: var(--color-deep-blue); display: inline-flex; font-weight: var(--weight-heading); gap: 0.6rem; min-height: 44px; text-decoration: none; }
+  .brand img { border-radius: 50%; display: block; height: 2rem; width: 2rem; }
   .menu-button { background: transparent; border: 1px solid var(--color-deep-blue); border-radius: 0.75rem; color: var(--color-deep-blue); font: inherit; min-height: 44px; padding: 0.5rem 0.85rem; }
   .menu { background: var(--color-white); display: none; inset: 72px 0 0; padding: 1rem; position: fixed; }
   .menu[data-open] { display: grid; align-content: start; gap: 1rem; }

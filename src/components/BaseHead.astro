@@ -62,6 +62,14 @@ const ngoJsonLd = {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width" />
 <title>{title}</title>
+{/* Favicon: the full official emblem, cropped to the circular badge (no
+    wordmark strip) and padded to square — unmodified content, just resized.
+    [NEEDS ORG] the brand kit calls for a distinct simplified mark derived
+    from the cupped hands element for small sizes; this is an interim icon
+    using the existing emblem until that dedicated asset is designed. */}
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <meta name="description" content={description} />
 <link rel="canonical" href={canonicalUrl.toString()} />
 {alternateLinks.map((link) => <link rel="alternate" hreflang={link.lang} href={link.href} />)}
