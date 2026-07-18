@@ -7,7 +7,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeader from '../../components/SectionHeader.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
-import ProjectRow from '../../components/ProjectRow.astro';
 
 const sectors = (await getCollection('sectors')).sort((a, b) => a.data.order - b.data.order);
 const sectorTitle = new Map(sectors.map((s) => [s.id, s.data.title]));
@@ -53,8 +52,14 @@ const pad = (arr: string[]) => `|${arr.join('|')}|`;
 const spacePad = (arr: string[]) => ` ${arr.join(' ')} `;
 
 const total = projects.length;
-const partnerCount = partners.length; // formal partners (the collection), not the granular donor strings
-const subhead = `${total} projects delivered in Sindhuli since ${minYear}, funded by ${partnerCount} partners and government agencies.`;
+// Brand kit + org profile commit to "15+" funders — a hard number reads
+// fabricated to a scrutinizing donor (and undercounts the granular donor list).
+const subhead = `${total} projects delivered in Sindhuli since ${minYear}, funded by 15+ funders and government agencies.`;
+// [NEEDS ORG] normalize the granular donor strings (51 unique) — many are
+// likely the same funder ("Skill Development Training Centre, Janakpur" vs
+// "Skill Development and Training Center, Janakpur", etc.).
+// [NEEDS ORG] municipality spelling: "Bhimasthan" vs "Bhimsthan" — confirm
+// canonical form so the two facet options collapse into one.
 ---
 
 <BaseLayout
@@ -171,18 +176,56 @@ const subhead = `${total} projects delivered in Sindhuli since ${minYear}, funde
     <div class="wrap">
       <h2 class="tier-label">Full record <span class="tier-count">({total})</span></h2>
       <ul class="record-list" id="record-list">
-        {allProjects.map((p) => (
-          <li
-            class="record-item"
-            data-status={p.data.status}
-            data-sectors={spacePad(p.data.sectors)}
-            data-donors={pad(p.data.donors)}
-            data-munis={pad(p.data.municipalities)}
-            data-year={p.data.startDate.getFullYear()}
-          >
-            <ProjectRow title={p.data.title} provenance={provenanceFor(p.data)} href={`/projects/${p.id}/`} />
-          </li>
-        ))}
+        {allProjects.map((p) => {
+          const donor = p.data.donors[0];
+          const muni = p.data.municipalities[0];
+          const sectorSlug = p.data.sectors[0];
+          const sectorLabel = sectorSlug ? sectorTitle.get(sectorSlug) : undefined;
+          const years = yearSpan(p.data.startDate, p.data.endDate, p.data.status);
+          const budget = nprM(p.data.budgetNPR);
+          const q = (k: string, v: string) => `/projects/?${k}=${encodeURIComponent(v)}#record-list`;
+          return (
+            <li
+              class="record-item"
+              data-status={p.data.status}
+              data-sectors={spacePad(p.data.sectors)}
+              data-donors={pad(p.data.donors)}
+              data-munis={pad(p.data.municipalities)}
+              data-year={p.data.startDate.getFullYear()}
+            >
+              <article class="row">
+                <h3><a href={`/projects/${p.id}/`}>{p.data.title}</a></h3>
+                <p class="provenance">
+                  {sectorLabel && sectorSlug && (
+                    <>
+                      <a class="prov-link sector-link" href={q('sector', sectorSlug)} data-filter="sector" data-value={sectorSlug}>{sectorLabel}</a>
+                      <span class="sep" aria-hidden="true"> · </span>
+                    </>
+                  )}
+                  {donor && (
+                    <>
+                      <a class="prov-link" href={q('donor', donor)} data-filter="donor" data-value={donor}>{donor}</a>
+                      <span class="sep" aria-hidden="true"> · </span>
+                    </>
+                  )}
+                  {muni && (
+                    <>
+                      <a class="prov-link" href={q('municipality', muni)} data-filter="municipality" data-value={muni}>{muni}</a>
+                      <span class="sep" aria-hidden="true"> · </span>
+                    </>
+                  )}
+                  <span>{years}</span>
+                  {budget && (
+                    <>
+                      <span class="sep" aria-hidden="true"> · </span>
+                      <span>{budget}</span>
+                    </>
+                  )}
+                </p>
+              </article>
+            </li>
+          );
+        })}
       </ul>
       <p class="no-results" id="no-results" hidden>
         No projects match these filters. <button class="clear-inline" type="button">Clear all</button>
@@ -294,6 +337,33 @@ const subhead = `${total} projects delivered in Sindhuli since ${minYear}, funde
 
     restore();
     apply();
+
+    // Provenance-link fast path: clicking donor/municipality/sector in a row
+    // sets that filter and scrolls to the list, without a page reload.
+    // Falls back gracefully to the anchor's href when JS is unavailable.
+    list.addEventListener('click', (e) => {
+      const t = (e.target as HTMLElement).closest<HTMLAnchorElement>('a.prov-link');
+      if (!t) return;
+      e.preventDefault();
+      const kind = t.dataset.filter;
+      const value = t.dataset.value;
+      if (!kind || !value) return;
+      if (kind === 'sector') {
+        panel.querySelectorAll<HTMLInputElement>('input[name="sector"]').forEach((i) => {
+          i.checked = i.value === value;
+        });
+      } else if (kind === 'donor' || kind === 'municipality') {
+        const sel = panel.querySelector(`select[name="${kind}"]`) as HTMLSelectElement;
+        sel.value = value;
+      }
+      apply();
+      document.getElementById('record-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // On restore (URL had filter params), keep the browser's hash-scroll intent.
+    if (location.hash === '#record-list') {
+      document.getElementById('record-list')?.scrollIntoView({ block: 'start' });
+    }
   }
 </script>
 
@@ -309,7 +379,20 @@ const subhead = `${total} projects delivered in Sindhuli since ${minYear}, funde
   .featured-grid { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
   .record-list { display: grid; list-style: none; margin-top: 1rem; padding: 0; }
   .record-item[hidden] { display: none; }
+  .row { border-block-start: 1px solid var(--color-stone); display: grid; gap: 0.35rem; padding: 1rem 0; }
+  .row h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.25; }
+  .row h3 a { color: var(--color-deep-blue); text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
+  .provenance { color: var(--color-slate); font-size: 0.85rem; font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); line-height: 1.5; }
+  .prov-link { color: var(--color-slate); text-decoration-thickness: 0.06em; text-underline-offset: 0.15em; }
+  .prov-link:hover { color: var(--color-deep-blue); }
+  .sector-link { color: var(--color-hill-green); }
+  .sector-link:hover { color: var(--color-hill-green); }
   .no-results { color: var(--color-slate); margin-top: 1.5rem; }
+  .clear-inline {
+    background: transparent; border: 1px solid var(--color-deep-blue); border-radius: 0.75rem;
+    color: var(--color-deep-blue); cursor: pointer; font: inherit; font-weight: var(--weight-medium);
+    margin-inline-start: 0.5rem; min-height: 44px; padding: 0.4rem 0.85rem;
+  }
 
   /* Filter bar */
   .filter-shell { margin-top: 2rem; }
