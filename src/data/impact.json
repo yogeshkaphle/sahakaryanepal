@@ -1,0 +1,18 @@
+{
+  "headline": {
+    "figure": "69,364",
+    "unit": "households",
+    "approxPeople": "300,026",
+    "label": "households directly benefited",
+    "provenance": "≈300,026 people · since 2004 · org profile 2025"
+  },
+  "achievements": [
+    { "figure": "11,674", "label": "school children supported", "provenance": "via 86 transitional learning centres, 56 ECD classrooms · post-earthquake education" },
+    { "figure": "4,879", "label": "cooperative share members", "provenance": "across 11 women-led cooperatives" },
+    { "figure": "1,204", "label": "households reached with COVID-19 relief", "provenance": "food + health-safety packages · Sindhuli" },
+    { "figure": "975", "label": "people trained in enterprise (SIYB)", "provenance": "≈90% women · 940 into vocational skills" },
+    { "figure": "13,000", "label": "saplings planted", "provenance": "Kamala riverbank + public land" },
+    { "figure": "785", "label": "household toilets built", "provenance": "plus 1,350 students given safe drinking water" }
+  ],
+  "note": "All figures verbatim from the organizational profile (2025) Major Achievements. Do not alter values."
+}
