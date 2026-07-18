@@ -1,0 +1,363 @@
+---
+// Projects index (/projects/) — the due-diligence spine.
+// All 50 projects render server-side (readable with JS off). Client JS only
+// adds filtering as progressive enhancement. Every value from the collection.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/SectionHeader.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import ProjectRow from '../../components/ProjectRow.astro';
+
+const sectors = (await getCollection('sectors')).sort((a, b) => a.data.order - b.data.order);
+const sectorTitle = new Map(sectors.map((s) => [s.id, s.data.title]));
+const partners = await getCollection('partners');
+
+const projects = await getCollection('projects');
+type Project = (typeof projects)[number];
+type ProjectData = Project['data'];
+const byStartDesc = (a: Project, b: Project) => b.data.startDate.getTime() - a.data.startDate.getTime();
+const featured = projects.filter((p) => p.data.featured).sort(byStartDesc);
+const allProjects = [...projects].sort(byStartDesc);
+
+// --- Derived facet options (never hardcoded) ---
+const uniqueSorted = (arr: string[]) => [...new Set(arr)].sort((a, b) => a.localeCompare(b));
+const donorOptions = uniqueSorted(projects.flatMap((p) => p.data.donors));
+const muniOptions = uniqueSorted(projects.flatMap((p) => p.data.municipalities));
+const startYears = projects.map((p) => p.data.startDate.getFullYear());
+const minYear = Math.min(...startYears);
+const maxYear = Math.max(...startYears);
+// Year ranges (5-year buckets across the actual span)
+const yearRanges = [];
+for (let from = Math.floor(minYear / 5) * 5; from <= maxYear; from += 5) {
+  yearRanges.push({ id: `${from}-${from + 4}`, label: `${from}–${from + 4}`, from, to: from + 4 });
+}
+const statusOptions = [
+  { id: 'ongoing', label: 'Ongoing' },
+  { id: 'completed', label: 'Completed' },
+];
+
+// --- Provenance line (donor · municipality · years · budget) ---
+const yearSpan = (start: Date, end: Date | undefined, status: string) =>
+  status === 'ongoing' || !end
+    ? `${start.getFullYear()}–ongoing`
+    : `${start.getFullYear()}–${end.getFullYear()}`;
+const nprM = (n: number | undefined) => (n ? `NPR ${(n / 1_000_000).toFixed(1)}M` : null);
+const provenanceFor = (d: ProjectData) =>
+  [d.donors[0], d.municipalities[0], yearSpan(d.startDate, d.endDate, d.status), nprM(d.budgetNPR)].filter(
+    (x): x is string => Boolean(x),
+  );
+
+// Data attributes for client-side filtering (padded so JS can do exact `includes`)
+const pad = (arr: string[]) => `|${arr.join('|')}|`;
+const spacePad = (arr: string[]) => ` ${arr.join(' ')} `;
+
+const total = projects.length;
+const partnerCount = partners.length; // formal partners (the collection), not the granular donor strings
+const subhead = `${total} projects delivered in Sindhuli since ${minYear}, funded by ${partnerCount} partners and government agencies.`;
+---
+
+<BaseLayout
+  title="Our projects — Sahakarya Nepal"
+  description={subhead}
+  footerLinks={[
+    { label: 'About', href: '/about/' },
+    { label: 'Our Work', href: '/our-work/' },
+    { label: 'Impact', href: '/impact/' },
+    { label: 'Reports', href: '/reports/' },
+    { label: 'Partners', href: '/partners/' },
+    { label: 'Contact', href: '/contact/' },
+  ]}
+>
+  <script is:inline>document.documentElement.classList.add('js');</script>
+
+  <section class="band-white">
+    <div class="wrap">
+      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Projects', href: '/projects/' }]} />
+      <SectionHeader eyebrow="THE RECORD" title="Our projects" />
+      <p class="subhead">{subhead}</p>
+
+      {/* Filter bar — shown only when JS is available (filtering needs it).
+          Without JS the full list below is complete and readable. */}
+      <div class="filter-shell" hidden>
+        <button class="filter-toggle" type="button" aria-expanded="false" aria-controls="filter-panel">
+          Filters
+        </button>
+        <form id="filter-panel" class="filter-panel" aria-label="Filter projects">
+          <fieldset>
+            <legend>Sector</legend>
+            <div class="chips">
+              {sectors.map((s) => (
+                <label class="chip">
+                  <input type="checkbox" name="sector" value={s.id} />
+                  <span>{s.data.title}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Status</legend>
+            <div class="chips">
+              {statusOptions.map((o) => (
+                <label class="chip">
+                  <input type="checkbox" name="status" value={o.id} />
+                  <span>{o.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Years</legend>
+            <div class="chips">
+              {yearRanges.map((r) => (
+                <label class="chip">
+                  <input type="checkbox" name="year" value={r.id} data-from={r.from} data-to={r.to} />
+                  <span>{r.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div class="selects">
+            <label class="select">
+              <span>Donor</span>
+              <select name="donor">
+                <option value="">All donors</option>
+                {donorOptions.map((d) => <option value={d}>{d}</option>)}
+              </select>
+            </label>
+            <label class="select">
+              <span>Municipality</span>
+              <select name="municipality">
+                <option value="">All municipalities</option>
+                {muniOptions.map((m) => <option value={m}>{m}</option>)}
+              </select>
+            </label>
+          </div>
+
+          <div class="filter-actions">
+            <p class="count" aria-live="polite">Showing {total} of {total}</p>
+            <button class="clear" type="button" hidden>Clear all</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  {/* Featured tier — flagship work. Hidden by JS when any filter is active. */}
+  <section class="band-stone" id="featured-tier">
+    <div class="wrap">
+      <h2 class="tier-label">Featured</h2>
+      <div class="featured-grid">
+        {featured.map((p) => (
+          <ProjectCard
+            title={p.data.title}
+            summary={p.data.summary}
+            sectors={p.data.sectors.map((slug) => sectorTitle.get(slug)).filter((x): x is string => Boolean(x))}
+            provenance={provenanceFor(p.data)}
+            status={p.data.status}
+            href={`/projects/${p.id}/`}
+            featured
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* Full record — every project, filterable. */}
+  <section class="band-white">
+    <div class="wrap">
+      <h2 class="tier-label">Full record <span class="tier-count">({total})</span></h2>
+      <ul class="record-list" id="record-list">
+        {allProjects.map((p) => (
+          <li
+            class="record-item"
+            data-status={p.data.status}
+            data-sectors={spacePad(p.data.sectors)}
+            data-donors={pad(p.data.donors)}
+            data-munis={pad(p.data.municipalities)}
+            data-year={p.data.startDate.getFullYear()}
+          >
+            <ProjectRow title={p.data.title} provenance={provenanceFor(p.data)} href={`/projects/${p.id}/`} />
+          </li>
+        ))}
+      </ul>
+      <p class="no-results" id="no-results" hidden>
+        No projects match these filters. <button class="clear-inline" type="button">Clear all</button>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Progressive-enhancement filtering: operates on already-rendered rows.
+  const panel = document.getElementById('filter-panel') as HTMLFormElement | null;
+  const shell = document.querySelector('.filter-shell') as HTMLElement | null;
+  if (panel && shell) {
+    shell.hidden = false;
+    const list = document.getElementById('record-list')!;
+    const items = Array.from(list.querySelectorAll<HTMLElement>('.record-item'));
+    const countEl = panel.querySelector('.count')!;
+    const clearBtn = panel.querySelector('.clear') as HTMLButtonElement;
+    const noResults = document.getElementById('no-results')!;
+    const featuredTier = document.getElementById('featured-tier')!;
+    const total = items.length;
+
+    const read = () => {
+      const sector = Array.from(panel.querySelectorAll<HTMLInputElement>('input[name="sector"]:checked')).map((i) => i.value);
+      const status = Array.from(panel.querySelectorAll<HTMLInputElement>('input[name="status"]:checked')).map((i) => i.value);
+      const year = Array.from(panel.querySelectorAll<HTMLInputElement>('input[name="year"]:checked')).map((i) => ({
+        from: Number(i.dataset.from),
+        to: Number(i.dataset.to),
+      }));
+      const donor = (panel.querySelector('select[name="donor"]') as HTMLSelectElement).value;
+      const municipality = (panel.querySelector('select[name="municipality"]') as HTMLSelectElement).value;
+      return { sector, status, year, donor, municipality };
+    };
+
+    const matches = (el: HTMLElement, f: ReturnType<typeof read>) => {
+      const sectors = el.dataset.sectors || '';
+      const donors = el.dataset.donors || '';
+      const munis = el.dataset.munis || '';
+      const st = el.dataset.status || '';
+      const yr = Number(el.dataset.year);
+      if (f.sector.length && !f.sector.some((s) => sectors.includes(` ${s} `))) return false;
+      if (f.status.length && !f.status.includes(st)) return false;
+      if (f.year.length && !f.year.some((r) => yr >= r.from && yr <= r.to)) return false;
+      if (f.donor && !donors.includes(`|${f.donor}|`)) return false;
+      if (f.municipality && !munis.includes(`|${f.municipality}|`)) return false;
+      return true;
+    };
+
+    const anyActive = (f: ReturnType<typeof read>) =>
+      f.sector.length || f.status.length || f.year.length || f.donor || f.municipality;
+
+    const syncUrl = (f: ReturnType<typeof read>) => {
+      const p = new URLSearchParams();
+      if (f.sector.length) p.set('sector', f.sector.join(','));
+      if (f.status.length) p.set('status', f.status.join(','));
+      if (f.year.length) p.set('year', f.year.map((r) => `${r.from}-${r.to}`).join(','));
+      if (f.donor) p.set('donor', f.donor);
+      if (f.municipality) p.set('municipality', f.municipality);
+      const qs = p.toString();
+      history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+    };
+
+    const apply = () => {
+      const f = read();
+      let shown = 0;
+      for (const el of items) {
+        const ok = matches(el, f);
+        el.hidden = !ok;
+        if (ok) shown++;
+      }
+      countEl.textContent = `Showing ${shown} of ${total}`;
+      const active = Boolean(anyActive(f));
+      clearBtn.hidden = !active;
+      featuredTier.hidden = active; // don't drown the filtered result with flagship cards
+      noResults.hidden = shown !== 0;
+      syncUrl(f);
+    };
+
+    const restore = () => {
+      const p = new URLSearchParams(location.search);
+      const setChecks = (name: string, vals: string[]) =>
+        panel.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((i) => {
+          i.checked = vals.includes(i.value);
+        });
+      setChecks('sector', (p.get('sector') || '').split(',').filter(Boolean));
+      setChecks('status', (p.get('status') || '').split(',').filter(Boolean));
+      setChecks('year', (p.get('year') || '').split(',').filter(Boolean));
+      const donor = p.get('donor') || '';
+      const muni = p.get('municipality') || '';
+      (panel.querySelector('select[name="donor"]') as HTMLSelectElement).value = donor;
+      (panel.querySelector('select[name="municipality"]') as HTMLSelectElement).value = muni;
+    };
+
+    const clearAll = () => {
+      panel.reset();
+      apply();
+    };
+
+    panel.addEventListener('change', apply);
+    clearBtn.addEventListener('click', clearAll);
+    document.querySelector('.clear-inline')?.addEventListener('click', clearAll);
+
+    // Mobile: collapse behind a Filters button
+    const toggle = shell.querySelector('.filter-toggle') as HTMLButtonElement;
+    toggle.addEventListener('click', () => {
+      const open = shell.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    restore();
+    apply();
+  }
+</script>
+
+<style>
+  .wrap { margin-inline: auto; max-width: 1200px; padding-inline: 1rem; }
+  section { padding-block: clamp(3rem, 6vw, 4.5rem); }
+  .band-white { background: var(--color-white); }
+  .band-stone { background: var(--color-stone); }
+  .subhead { color: var(--color-slate); line-height: 1.6; margin-top: 1rem; max-width: 68ch; }
+
+  .tier-label { color: var(--color-ink); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tier-count { color: var(--color-slate); }
+  .featured-grid { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+  .record-list { display: grid; list-style: none; margin-top: 1rem; padding: 0; }
+  .record-item[hidden] { display: none; }
+  .no-results { color: var(--color-slate); margin-top: 1.5rem; }
+
+  /* Filter bar */
+  .filter-shell { margin-top: 2rem; }
+  .filter-toggle {
+    background: transparent; border: 1px solid var(--color-deep-blue); border-radius: 0.75rem;
+    color: var(--color-deep-blue); font: inherit; font-weight: var(--weight-medium);
+    min-height: 44px; padding: 0.5rem 1rem;
+  }
+  .filter-panel { display: grid; gap: 1.25rem; margin-top: 1rem; }
+  fieldset { border: 0; margin: 0; padding: 0; }
+  legend { color: var(--color-hill-green); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+  .chip { display: inline-flex; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span {
+    align-items: center; border: 1px solid var(--color-stone); border-radius: 999px;
+    color: var(--color-ink); cursor: pointer; display: inline-flex; font-size: 0.85rem;
+    min-height: 40px; padding: 0.35rem 0.85rem;
+  }
+  .chip input:checked + span { background: var(--color-deep-blue); border-color: var(--color-deep-blue); color: var(--color-white); }
+  .chip input:focus-visible + span { outline: 2px solid var(--color-deep-blue); outline-offset: 2px; }
+  .selects { display: grid; gap: 1rem; }
+  .select { display: grid; gap: 0.35rem; }
+  .select span { color: var(--color-hill-green); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  select {
+    background: var(--color-white); border: 1px solid var(--color-stone); border-radius: 0.5rem;
+    color: var(--color-ink); font: inherit; min-height: 44px; max-width: 100%; padding: 0.5rem 0.65rem;
+  }
+  .filter-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+  .count { color: var(--color-slate); font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); }
+  .clear, .clear-inline {
+    background: transparent; border: 1px solid var(--color-deep-blue); border-radius: 0.75rem;
+    color: var(--color-deep-blue); cursor: pointer; font: inherit; font-weight: var(--weight-medium);
+    min-height: 44px; padding: 0.4rem 0.85rem;
+  }
+
+  /* Without JS, hide the toggle button (only relevant on mobile with JS). */
+  .filter-toggle { display: none; }
+
+  @media (min-width: 760px) {
+    .featured-grid { grid-template-columns: 1fr 1fr; align-items: start; }
+    .selects { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Mobile: collapse the panel behind the Filters button (JS toggles .open) */
+  @media (max-width: 759px) {
+    html.js .filter-toggle { display: inline-flex; align-items: center; }
+    html.js .filter-shell .filter-panel { display: none; }
+    html.js .filter-shell.open .filter-panel { display: grid; }
+  }
+</style>
