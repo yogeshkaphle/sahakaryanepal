@@ -77,12 +77,12 @@ const footerContact = [
   org.contact.website,
 ];
 const footerLinks = [
-  { label: 'About', href: '/about' },
-  { label: 'Our Work', href: '/our-work' },
-  { label: 'Impact', href: '/impact' },
-  { label: 'Reports', href: '/reports' },
-  { label: 'Partners', href: '/partners' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'About', href: '/about/' },
+  { label: 'Our Work', href: '/our-work/' },
+  { label: 'Impact', href: '/impact/' },
+  { label: 'Reports', href: '/reports/' },
+  { label: 'Partners', href: '/partners/' },
+  { label: 'Contact', href: '/contact/' },
 ];
 ---
 
@@ -107,7 +107,7 @@ const footerLinks = [
         <div class="cta-row">
           {/* Deep Blue solid, not marigold — the only marigold in this viewport
               is the nav's "Partner with us" CTA (one accent per view). */}
-          <Button href="/projects" label="See our projects" variant="secondary-solid" />
+          <Button href="/projects/" label="See our projects" variant="secondary-solid" />
         </div>
       </div>
 
@@ -136,7 +136,7 @@ const footerLinks = [
       <ul class="program-grid">
         {sectors.map((s) => (
           <li class="program-card">
-            <h3><a href={`/our-work/${s.id}`}>{s.data.title}</a></h3>
+            <h3><a href={`/our-work/${s.id}/`}>{s.data.title}</a></h3>
             <p>{s.data.description}</p>
           </li>
         ))}
@@ -156,7 +156,7 @@ const footerLinks = [
             sectors={p.data.sectors.map((slug) => sectorTitle.get(slug)).filter((x): x is string => Boolean(x))}
             provenance={provenanceFor(p.data)}
             status={p.data.status}
-            href={`/projects/${p.id}`}
+            href={`/projects/${p.id}/`}
             featured
           />
           /* Photos: no confident, captioned photo→project match exists in
@@ -165,7 +165,7 @@ const footerLinks = [
         ))}
       </div>
       <div class="more">
-        <Button href="/projects" label="See all 50 projects" variant="secondary" />
+        <Button href="/projects/" label="See all 50 projects" variant="secondary" />
       </div>
     </div>
   </section>
@@ -196,7 +196,7 @@ const footerLinks = [
         ))}
       </div>
       <div class="more">
-        <Button href="/impact" label="See our full impact" variant="secondary" />
+        <Button href="/impact/" label="See our full impact" variant="secondary" />
       </div>
     </div>
   </section>
@@ -214,7 +214,7 @@ const footerLinks = [
         ))}
       </div>
       <div class="more">
-        <Button href="/partners" label="See all partners" variant="secondary" />
+        <Button href="/partners/" label="See all partners" variant="secondary" />
       </div>
     </div>
   </section>
@@ -237,7 +237,7 @@ const footerLinks = [
         ))}
       </div>
       <div class="more">
-        <Button href="/reports" label="See all reports" variant="secondary" />
+        <Button href="/reports/" label="See all reports" variant="secondary" />
       </div>
     </div>
   </section>
@@ -246,7 +246,7 @@ const footerLinks = [
   <section class="cta-band">
     <div class="wrap cta-band-inner">
       <h2>Work with us in Sindhuli.</h2>
-      <Button href="/partner-with-us" label="Partner with us" variant="primary" />
+      <Button href="/partner-with-us/" label="Partner with us" variant="primary" />
     </div>
   </section>
 </BaseLayout>
@@ -320,8 +320,15 @@ const footerLinks = [
     max-width: 68ch;
   }
 
-  /* 5. Impact */
-  .impact-headline { margin-top: 2rem; }
+  /* 5. Impact — more breathing room; the figures read cramped otherwise. */
+  .impact-headline { margin-top: 2.5rem; }
+  .impact-grid { row-gap: 3rem; margin-top: 2.5rem; }
+  /* space each figure from its label and provenance line (element-qualified
+     selectors so these win over AnchorStat's own scoped spacing) */
+  .impact-headline :global(p.label),
+  .impact-grid :global(p.label) { margin-top: 0.85rem; }
+  .impact-headline :global(p.provenance),
+  .impact-grid :global(p.provenance) { margin-top: 0.85rem; }
 
   /* 6. Partners */
   .partner-groups { display: grid; gap: 2rem; margin-top: 2rem; }
