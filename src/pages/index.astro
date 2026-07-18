@@ -1,0 +1,377 @@
+---
+// Home — Sahakarya Nepal. Donor-due-diligence landing.
+// Every rendered fact comes from src/content/* or src/data/governance.json.
+// Anything not sourced is marked [NEEDS ORG] / [VERIFY] and rendered as an
+// empty/placeholder state — never fabricated. See docs/sahakarya-design-system.md.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import AnchorStat from '../components/AnchorStat.astro';
+import Button from '../components/Button.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ReportRow from '../components/ReportRow.astro';
+import impact from '../data/impact.json';
+import org from '../data/org.json';
+
+// --- Sectors (Programs) — sorted by their authored order ---
+const sectors = (await getCollection('sectors')).sort((a, b) => a.data.order - b.data.order);
+const sectorTitle = new Map(sectors.map((s) => [s.id, s.data.title]));
+
+// --- Featured projects — featured:true, newest first, take 3 ---
+const featured = (await getCollection('projects'))
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime())
+  .slice(0, 3);
+
+// --- Municipalities the projects actually name (sourced, de-duplicated) ---
+const municipalities = [
+  ...new Set(
+    (await getCollection('projects'))
+      .flatMap((p) => p.data.municipalities)
+      .filter((m) => m.includes('Municipality')),
+  ),
+].sort();
+
+// --- Partners — grouped by type (logos are [NEEDS ORG]; names only for now) ---
+const partners = await getCollection('partners');
+const partnerGroups = [
+  { type: 'multilateral', label: 'Multilateral' },
+  { type: 'bilateral', label: 'Bilateral' },
+  { type: 'ingo', label: 'International NGOs' },
+].map((g) => ({
+  ...g,
+  names: partners.filter((p) => p.data.type === g.type).map((p) => p.data.name).sort(),
+}));
+
+// --- Reports — newest first ---
+const reports = (await getCollection('reports')).sort((a, b) => b.data.yearAD - a.data.yearAD);
+
+// Helpers
+const yearRange = (start: Date, end?: Date) =>
+  `${start.getFullYear()}–${end ? end.getFullYear() : 'present'}`;
+const nprM = (n?: number) => (n ? `NPR ${(n / 1_000_000).toFixed(1)}M` : null);
+const provenanceFor = (d: (typeof featured)[number]['data']) =>
+  [d.donors[0], d.municipalities[0], yearRange(d.startDate, d.endDate), nprM(d.budgetNPR)].filter(
+    (x): x is string => Boolean(x),
+  );
+
+// Registration + contact — all from src/data/org.json (org records).
+const reg = org.registration;
+const registrationItems = [
+  `Reg. ${reg.daoSindhuli}`,
+  `SWC ${reg.swc}`,
+  `NGO Fed. ${reg.ngoFederation}`,
+  `PAN ${reg.pan}`,
+  `DUNS ${reg.duns}`,
+  `NCAGE ${reg.ncage}`,
+  `EuropeAid ${reg.europeAidPador}`,
+];
+const registrationLine = registrationItems.join(' · ');
+const auditDate = org.governanceDates.recentAudit;
+// [NEEDS ORG] org.json emailNote: gmail is on-record but an org-domain email
+// reads better to donors — confirm before launch.
+const footerContact = [
+  org.contact.address,
+  org.contact.tel.join(' · '),
+  org.contact.email,
+  org.contact.website,
+];
+const footerLinks = [
+  { label: 'About', href: '/about/' },
+  { label: 'Our Work', href: '/our-work/' },
+  { label: 'Impact', href: '/impact/' },
+  { label: 'Reports', href: '/reports/' },
+  { label: 'Partners', href: '/partners/' },
+  { label: 'Contact', href: '/contact/' },
+];
+---
+
+<BaseLayout
+  title="Sahakarya Nepal — twenty years of development work in Sindhuli"
+  description="Sahakarya Nepal is a female-led development organization working with marginalized communities across Sindhuli, Nepal since 2004 — on livelihoods, health, education, disaster resilience and good governance."
+  footerRegistrations={registrationItems}
+  footerLinks={footerLinks}
+  footerContact={footerContact}
+>
+  {/* 1. HERO — record-panel pattern (design system §6). One marigold moment: the primary CTA. */}
+  <section class="hero band-white">
+    <div class="wrap hero-grid">
+      <div class="hero-message">
+        <p class="eyebrow">SINDHULI, NEPAL · EST. 2004</p>
+        <h1>Twenty years of development work in Sindhuli, led by women.</h1>
+        <p class="subhead">
+          Sahakarya Nepal works with Dalit, Janajati, Danuwar, Mushar, Majhi and other
+          marginalized communities across Sindhuli — on livelihoods, health, education,
+          disaster resilience and good governance.
+        </p>
+        <div class="cta-row">
+          {/* Deep Blue solid, not marigold — the only marigold in this viewport
+              is the nav's "Partner with us" CTA (one accent per view). */}
+          <Button href="/projects/" label="See our projects" variant="secondary-solid" />
+        </div>
+      </div>
+
+      {/* Record panel — four hard-sourced figures, each with a provenance line. */}
+      <div class="record-panel" aria-label="Our record in figures">
+        <AnchorStat figure="20" label="years in Sindhuli" provenance={['Est. 2004', 'Reg. 363']} />
+        <AnchorStat figure="50" label="projects delivered" provenance={['2004–2026']} />
+        <AnchorStat
+          figure="8 of 9"
+          label="executive members are women"
+          provenance={['female-led', 'incl. Executive Director']}
+        />
+        <AnchorStat
+          figure="15+"
+          label="funding partners"
+          provenance={['UNDP', 'EU', 'USAID', 'SDC', 'ADB …']}
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* 2. PROGRAMS — the 7 sectors, linked, Hill Green context. */}
+  <section class="band-stone">
+    <div class="wrap">
+      <SectionHeader eyebrow="OUR WORK" title="What we work on" />
+      <ul class="program-grid">
+        {sectors.map((s) => (
+          <li class="program-card">
+            <h3><a href={`/our-work/${s.id}/`}>{s.data.title}</a></h3>
+            <p>{s.data.description}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  {/* 3. THE RECORD — 3 featured projects, newest first, UNDP land-degradation leads. */}
+  <section class="band-white">
+    <div class="wrap">
+      <SectionHeader eyebrow="THE RECORD" title="Recent work, in detail" />
+      <div class="record-list">
+        {featured.map((p) => (
+          <ProjectCard
+            title={p.data.title}
+            summary={p.data.summary}
+            sectors={p.data.sectors.map((slug) => sectorTitle.get(slug)).filter((x): x is string => Boolean(x))}
+            provenance={provenanceFor(p.data)}
+            status={p.data.status}
+            href={`/projects/${p.id}/`}
+            featured
+          />
+          /* Photos: no confident, captioned photo→project match exists in
+             src/assets/photos/ yet, so cards render text-only (no Stone block
+             forced). [NEEDS ORG: confirm photo match + consent before pairing]. */
+        ))}
+      </div>
+      <div class="more">
+        <Button href="/projects/" label="See all 50 projects" variant="secondary" />
+      </div>
+    </div>
+  </section>
+
+  {/* 4. WHERE WE WORK — municipalities the projects actually name (sourced). */}
+  <section class="band-stone">
+    <div class="wrap">
+      <SectionHeader eyebrow="WHERE WE WORK" title="Across Sindhuli District" />
+      <p class="where-list">{municipalities.join(' · ')}</p>
+      {/* [NEEDS ORG asset]: a static district map. Text list is the v1 treatment. */}
+    </div>
+  </section>
+
+  {/* 5. IMPACT — all figures verbatim from src/data/impact.json (org profile 2025). */}
+  <section class="band-white">
+    <div class="wrap">
+      <SectionHeader eyebrow="IMPACT" title="What the work adds up to" />
+      <div class="impact-headline">
+        <AnchorStat
+          figure={impact.headline.figure}
+          label={impact.headline.label}
+          provenance={[impact.headline.provenance]}
+        />
+      </div>
+      <div class="impact-grid">
+        {impact.achievements.map((a) => (
+          <AnchorStat figure={a.figure} label={a.label} provenance={[a.provenance]} />
+        ))}
+      </div>
+      <div class="more">
+        <Button href="/impact/" label="See our full impact" variant="secondary" />
+      </div>
+    </div>
+  </section>
+
+  {/* 6. PARTNERS — third-party trust. Names grouped by type; logos are [NEEDS ORG] (Annex 12). */}
+  <section class="band-stone">
+    <div class="wrap">
+      <SectionHeader eyebrow="PARTNERS" title="Who funds our work" />
+      <div class="partner-groups">
+        {partnerGroups.map((g) => (
+          <div class="partner-group">
+            <p class="group-label">{g.label}</p>
+            <ul>{g.names.map((n) => <li>{n}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <div class="more">
+        <Button href="/partners/" label="See all partners" variant="secondary" />
+      </div>
+    </div>
+  </section>
+
+  {/* 7. TRANSPARENCY — pure due-diligence. Plain and factual. */}
+  <section class="band-white">
+    <div class="wrap">
+      <SectionHeader eyebrow="TRANSPARENCY" title="Registered, audited, on the record" />
+      <p class="reg-line">{registrationLine}</p>
+      <p class="reg-line">Most recent audit: {auditDate}</p>
+      <div class="reports">
+        {reports.map((r) => (
+          <ReportRow
+            title={r.data.title}
+            yearBS={r.data.yearBS}
+            yearAD={r.data.yearAD}
+            type={r.data.type}
+            file={r.data.file}
+          />
+        ))}
+      </div>
+      <div class="more">
+        <Button href="/reports/" label="See all reports" variant="secondary" />
+      </div>
+    </div>
+  </section>
+
+  {/* 8. CLOSING CTA — separate viewport, so a second marigold CTA is allowed here. */}
+  <section class="cta-band">
+    <div class="wrap cta-band-inner">
+      <h2>Work with us in Sindhuli.</h2>
+      <Button href="/partner-with-us/" label="Partner with us" variant="primary" />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .wrap { margin-inline: auto; max-width: 1200px; padding-inline: 1rem; }
+  section { padding-block: clamp(4rem, 8vw, 6rem); }
+  .band-white { background: var(--color-white); }
+  .band-stone { background: var(--color-stone); }
+
+  .eyebrow {
+    color: var(--color-hill-green);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  /* 1. Hero */
+  .hero-grid { display: grid; gap: 2.5rem; }
+  .hero-message { max-width: 68ch; }
+  h1 {
+    color: var(--color-ink);
+    font-size: clamp(2.5rem, 6vw, 3.5rem);
+    font-weight: var(--weight-heading);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-top: 0.5rem;
+    max-width: 20ch;
+  }
+  .subhead {
+    color: var(--color-slate);
+    font-size: clamp(1rem, 2vw, 1.0625rem);
+    line-height: 1.6;
+    margin-top: 1.25rem;
+    max-width: 60ch;
+  }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+  .record-panel {
+    align-content: start;
+    background: var(--color-stone);
+    border-radius: 1rem;
+    display: grid;
+    gap: 1.75rem;
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+  }
+
+  /* 2. Programs */
+  .program-grid {
+    display: grid;
+    gap: 1.5rem;
+    list-style: none;
+    margin-top: 2rem;
+    padding: 0;
+  }
+  .program-card h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.25; }
+  .program-card a { color: var(--color-hill-green); text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
+  .program-card p { color: var(--color-slate); line-height: 1.6; margin-top: 0.4rem; max-width: 68ch; }
+
+  /* 3 / 5 / 6 / 7 shared */
+  .record-list, .impact-grid { display: grid; gap: 1.5rem; margin-top: 2rem; }
+  .more { margin-top: 2rem; }
+
+  /* 4. Where we work */
+  .where-list {
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.9;
+    margin-top: 1.5rem;
+    max-width: 68ch;
+  }
+
+  /* 5. Impact — more breathing room; the figures read cramped otherwise. */
+  .impact-headline { margin-top: 2.5rem; }
+  .impact-grid { row-gap: 3rem; margin-top: 2.5rem; }
+  /* space each figure from its label and provenance line (element-qualified
+     selectors so these win over AnchorStat's own scoped spacing) */
+  .impact-headline :global(p.label),
+  .impact-grid :global(p.label) { margin-top: 0.85rem; }
+  .impact-headline :global(p.provenance),
+  .impact-grid :global(p.provenance) { margin-top: 0.85rem; }
+
+  /* 6. Partners */
+  .partner-groups { display: grid; gap: 2rem; margin-top: 2rem; }
+  .group-label {
+    color: var(--color-hill-green);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .partner-group ul { display: grid; gap: 0.4rem; list-style: none; margin-top: 0.75rem; padding: 0; }
+  .partner-group li { color: var(--color-ink); font-weight: var(--weight-medium); line-height: 1.5; }
+
+  /* 7. Transparency */
+  .reg-line {
+    color: var(--color-slate);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--weight-medium);
+    line-height: 1.7;
+    margin-top: 1rem;
+    max-width: 68ch;
+  }
+  .reports { margin-top: 1.5rem; }
+
+  /* 8. Closing CTA band — Deep Blue, white text, one marigold button. */
+  .cta-band { background: var(--color-deep-blue); }
+  .cta-band-inner { align-items: center; display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; }
+  .cta-band h2 {
+    color: var(--color-white);
+    font-size: clamp(1.75rem, 5vw, 2.25rem);
+    font-weight: var(--weight-heading);
+    line-height: 1.15;
+    max-width: 20ch;
+  }
+
+  @media (min-width: 760px) {
+    .wrap { padding-inline: 1.5rem; }
+    .program-grid { grid-template-columns: 1fr 1fr; }
+    .partner-groups { grid-template-columns: repeat(3, 1fr); }
+    .impact-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 960px) {
+    .hero-grid { grid-template-columns: 1.2fr 0.8fr; align-items: start; }
+  }
+</style>

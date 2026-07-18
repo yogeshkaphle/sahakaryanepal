@@ -1,0 +1,307 @@
+---
+// Project detail — the receipt. Every value from the projects collection.
+// Objectives/achievements render only when non-empty; never fabricated.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import SectorTag from '../../components/SectorTag.astro';
+import StatusPill from '../../components/StatusPill.astro';
+import ProjectRow from '../../components/ProjectRow.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((p) => ({ params: { slug: p.id }, props: { project: p } }));
+}
+
+const { project } = Astro.props;
+const d = project.data;
+
+// Sectors + partners for cross-links (link only if the target exists)
+const sectors = await getCollection('sectors');
+const sectorById = new Map(sectors.map((s) => [s.id, s]));
+const partners = await getCollection('partners');
+// Match donor strings to partner records by exact name OR case-insensitive slug
+const partnerByKey = new Map<string, string>();
+for (const p of partners) {
+  partnerByKey.set(p.data.name, p.id);
+  partnerByKey.set(p.id.toLowerCase(), p.id);
+}
+const partnerSlugFor = (donor: string) =>
+  partnerByKey.get(donor) ?? partnerByKey.get(donor.toLowerCase()) ?? null;
+
+// Provenance line (donor · municipality · years · budget)
+const yearSpan =
+  d.status === 'ongoing' || !d.endDate
+    ? `${d.startDate.getFullYear()}–ongoing`
+    : `${d.startDate.getFullYear()}–${d.endDate.getFullYear()}`;
+const nprM = d.budgetNPR ? `NPR ${(d.budgetNPR / 1_000_000).toFixed(1)}M` : null;
+const nprFull = d.budgetNPR ? `NPR ${d.budgetNPR.toLocaleString('en-US')}` : null;
+const provenanceItems = [d.donors[0], d.municipalities[0], yearSpan, nprM].filter(
+  (x): x is string => Boolean(x),
+);
+const provenance = provenanceItems.join(' · ');
+
+// Long-form duration
+const fmt = (dt: Date) =>
+  dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+const duration =
+  d.status === 'ongoing'
+    ? `Ongoing since ${fmt(d.startDate)}`
+    : d.endDate
+      ? `${fmt(d.startDate)} – ${fmt(d.endDate)}`
+      : `Since ${fmt(d.startDate)}`;
+
+// Related projects — the traceability web.
+// Scoring: sector overlap and donor overlap each count double (they're the
+// two facets a donor is most likely tracing), municipality overlap counts
+// single. Projects with zero overlap are excluded. Ties break by most recent
+// startDate so newer work surfaces first. Top 3 render as compact rows.
+const allProjects = await getCollection('projects');
+const related = allProjects
+  .filter((p) => p.id !== project.id)
+  .map((p) => {
+    const sectorHits = p.data.sectors.filter((s) => d.sectors.includes(s)).length;
+    const donorHits = p.data.donors.filter((x) => d.donors.includes(x)).length;
+    const muniHits = p.data.municipalities.filter((x) => d.municipalities.includes(x)).length;
+    return { p, score: sectorHits * 2 + donorHits * 2 + muniHits };
+  })
+  .filter((r) => r.score > 0)
+  .sort((a, b) => b.score - a.score || b.p.data.startDate.getTime() - a.p.data.startDate.getTime())
+  .slice(0, 3)
+  .map((r) => r.p);
+
+const relatedProv = (rd: typeof d) =>
+  [rd.donors[0], rd.municipalities[0], `${rd.startDate.getFullYear()}–${rd.status === 'ongoing' || !rd.endDate ? 'ongoing' : rd.endDate.getFullYear()}`, rd.budgetNPR ? `NPR ${(rd.budgetNPR / 1_000_000).toFixed(1)}M` : null].filter((x): x is string => Boolean(x));
+
+const description = d.summary;
+const pageTitle = `${d.title} — Sahakarya Nepal`;
+
+// Sector filter link on /projects/
+const filterHref = (kind: string, value: string) =>
+  `/projects/?${kind}=${encodeURIComponent(value)}#record-list`;
+
+// [NEEDS ORG] richer objectives/achievements for flagship projects — can be
+// populated from annual reports. All 50 currently render as summary +
+// key-facts, which is honest and reads as due-diligence-first.
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={description}
+  footerLinks={[
+    { label: 'About', href: '/about/' },
+    { label: 'Our Work', href: '/our-work/' },
+    { label: 'Impact', href: '/impact/' },
+    { label: 'Reports', href: '/reports/' },
+    { label: 'Partners', href: '/partners/' },
+    { label: 'Contact', href: '/contact/' },
+  ]}
+>
+  <section class="band-white">
+    <div class="wrap">
+      <Breadcrumbs
+        trail={[
+          { label: 'Home', href: '/' },
+          { label: 'Projects', href: '/projects/' },
+          { label: d.title, href: `/projects/${project.id}/` },
+        ]}
+      />
+
+      {/* Header */}
+      <div class="tags">
+        {d.sectors.map((slug) => {
+          const s = sectorById.get(slug);
+          return s ? <SectorTag label={s.data.title} href={`/our-work/${s.id}/`} /> : null;
+        })}
+      </div>
+      <h1>{d.title}</h1>
+      <p class="provenance-lead">{provenance}</p>
+      <div class="status"><StatusPill status={d.status} /></div>
+
+      {/* Summary */}
+      <p class="summary">{d.summary}</p>
+
+      {/* Key facts */}
+      <section class="key-facts" aria-labelledby="facts-heading">
+        <h2 id="facts-heading">Project facts</h2>
+        <dl>
+          <div class="fact">
+            <dt>{d.donors.length > 1 ? 'Funders' : 'Funder'}</dt>
+            <dd>
+              {d.donors.map((donor, i) => {
+                const slug = partnerSlugFor(donor);
+                return (
+                  <>
+                    {slug ? <a href={`/partners/${slug}/`}>{donor}</a> : <span>{donor}</span>}
+                    {i < d.donors.length - 1 && <span aria-hidden="true">, </span>}
+                  </>
+                );
+              })}
+            </dd>
+          </div>
+
+          <div class="fact">
+            <dt>{d.municipalities.length > 1 ? 'Municipalities' : 'Municipality'}</dt>
+            <dd>
+              {d.municipalities.map((m, i) => (
+                <>
+                  <a href={filterHref('municipality', m)}>{m}</a>
+                  {i < d.municipalities.length - 1 && <span aria-hidden="true">, </span>}
+                </>
+              ))}
+            </dd>
+          </div>
+
+          {d.wards && (
+            <div class="fact">
+              <dt>Wards</dt>
+              <dd><span>{d.wards}</span></dd>
+            </div>
+          )}
+
+          <div class="fact">
+            <dt>Duration</dt>
+            <dd><span>{duration}</span></dd>
+          </div>
+
+          {nprFull && (
+            <div class="fact">
+              <dt>Budget</dt>
+              <dd><span>{nprFull} <span class="budget-abbrev">({nprM})</span></span></dd>
+            </div>
+          )}
+
+          <div class="fact">
+            <dt>{d.sectors.length > 1 ? 'Sectors' : 'Sector'}</dt>
+            <dd>
+              {d.sectors.map((slug, i) => {
+                const s = sectorById.get(slug);
+                return (
+                  <>
+                    {s ? <a href={`/our-work/${s.id}/`}>{s.data.title}</a> : <span>{slug}</span>}
+                    {i < d.sectors.length - 1 && <span aria-hidden="true">, </span>}
+                  </>
+                );
+              })}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* Objectives — render only if non-empty; do not fabricate. */}
+      {d.objectives.length > 0 && (
+        <section aria-labelledby="obj-heading">
+          <h2 id="obj-heading">Objectives</h2>
+          <ul class="factual-list">
+            {d.objectives.map((o) => <li>{o}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {/* Achievements — render only if non-empty. */}
+      {d.achievements.length > 0 && (
+        <section aria-labelledby="ach-heading">
+          <h2 id="ach-heading">Achievements</h2>
+          <ul class="factual-list">
+            {d.achievements.map((a) => <li>{a}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {/* Related — cross-linking is the traceability web. */}
+      {related.length > 0 && (
+        <section class="related" aria-labelledby="rel-heading">
+          <h2 id="rel-heading">Related projects</h2>
+          <div class="related-list">
+            {related.map((r) => (
+              <ProjectRow title={r.data.title} provenance={relatedProv(r.data)} href={`/projects/${r.id}/`} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Quiet return CTA. */}
+      <p class="return"><a href="/projects/">← All projects</a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .wrap { margin-inline: auto; max-width: 68rem; padding-inline: 1rem; }
+  section.band-white { background: var(--color-white); padding-block: clamp(3rem, 6vw, 4.5rem); }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
+  h1 {
+    color: var(--color-ink);
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: var(--weight-heading);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin-top: 1rem;
+    max-width: 30ch;
+  }
+  .provenance-lead {
+    color: var(--color-slate);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--weight-medium);
+    line-height: 1.5;
+    margin-top: 1rem;
+  }
+  .status { margin-top: 1rem; }
+  .summary { color: var(--color-ink); line-height: 1.6; margin-top: 2rem; max-width: 68ch; }
+
+  /* Key facts panel — bordered Stone block, tabular figures. */
+  .key-facts {
+    background: var(--color-stone);
+    border: 1px solid color-mix(in srgb, var(--color-slate) 12%, var(--color-stone));
+    border-radius: 1rem;
+    margin-top: 2.5rem;
+    padding: 1.5rem;
+  }
+  .key-facts h2 {
+    color: var(--color-hill-green);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  dl { display: grid; gap: 0.9rem; margin: 0; }
+  .fact { display: grid; gap: 0.25rem; }
+  dt {
+    color: var(--color-slate);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  dd {
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+    margin: 0;
+  }
+  dd a { color: var(--color-deep-blue); text-decoration-thickness: 0.06em; text-underline-offset: 0.15em; }
+  .budget-abbrev { color: var(--color-slate); }
+
+  h2 {
+    color: var(--color-ink);
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: 2.5rem;
+  }
+  .factual-list { color: var(--color-ink); line-height: 1.6; margin-top: 1rem; padding-inline-start: 1.25rem; }
+  .factual-list li { margin-block: 0.35rem; }
+
+  .related-list { display: grid; margin-top: 1rem; }
+
+  .return { margin-top: 2.5rem; }
+  .return a { color: var(--color-deep-blue); text-underline-offset: 0.18em; }
+
+  @media (min-width: 760px) {
+    /* Two-column key facts on wider screens: label | value */
+    .fact { grid-template-columns: 10rem 1fr; align-items: baseline; gap: 1rem; }
+  }
+</style>

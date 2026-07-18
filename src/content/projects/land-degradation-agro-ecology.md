@@ -1,7 +1,11 @@
 ---
 title: "Enhancing Community Capacities for Addressing Land Degradation and Promoting Agro-Ecological Production in Sindhuli District"
 status: "ongoing"
-featured: true
+# [NEEDS ORG] Scheduled to close 2026-06-30; today is past that date. Pulled
+# from featured (was: true) until org confirms the current status. Restore
+# `featured: true` once verified. Do not surface as an ongoing flagship in
+# the meantime.
+featured: false
 sectors: ["climate-change", "livelihood-entrepreneurship"]
 donors: ["UNDP", "Australian Aid", "GEF/SGP", "Kamalamai Municipality", "Dudhauli Municipality"]
 municipalities: ["Kamalamai Municipality", "Dudhauli Municipality"]

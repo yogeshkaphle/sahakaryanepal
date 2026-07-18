@@ -7,26 +7,30 @@ import StatusPill from './StatusPill.astro';
 interface Props { title: string; summary: string; sectors: string[]; provenance: string[]; status: 'ongoing' | 'completed'; href: string; featured?: boolean; image?: ImageMetadata | null; }
 const { title, summary, sectors, provenance, status, href, featured = false, image = null } = Astro.props;
 ---
-<article class:list={['project-card', { featured }]}>
+<article class:list={['project-card', { featured, 'has-photo': Boolean(featured && image) }]}>
   {featured && image && <Figure src={image} alt={title} />}
   <div class="body">
     <div class="tags">{sectors.map((sector) => <SectorTag label={sector} />)}</div>
     <h3><a href={href}>{title}</a></h3>
     <p class="summary">{summary}</p>
     <ProvenanceLine items={provenance} />
-    <StatusPill status={status} />
+    <div class="status"><StatusPill status={status} /></div>
   </div>
 </article>
 <style>
   .project-card { background: var(--color-white); border: 1px solid var(--color-stone); border-radius: 1rem; padding: 1rem; }
   .featured { display: grid; gap: 1.5rem; }
   .body { display: grid; gap: 0.75rem; }
+  .status { justify-self: start; }
   .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); font-weight: 600; line-height: 1.25; }
   .featured h3 { font-size: clamp(1.5rem, 4vw, 2rem); }
   a { color: var(--color-deep-blue); text-decoration-thickness: 0.08em; text-underline-offset: 0.18em; }
   .summary { color: var(--color-ink); display: -webkit-box; font-size: clamp(1rem, 2vw, 1.0625rem); line-height: 1.6; max-width: 68ch; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
-  @media (min-width: 760px) { .featured { grid-template-columns: minmax(0, 600px) 1fr; } }
+  /* Two-column featured layout only when a photo is present; otherwise the card
+     hugs its content width instead of leaving a dead right-hand column. */
+  .featured:not(.has-photo) { max-width: 42rem; }
+  @media (min-width: 760px) { .featured.has-photo { grid-template-columns: minmax(0, 600px) 1fr; } }
   @media (prefers-reduced-motion: no-preference) { .project-card { transition: background-color 160ms ease, border-color 160ms ease; } }
   .project-card:hover { background: color-mix(in srgb, var(--color-stone) 35%, var(--color-white)); border-color: color-mix(in srgb, var(--color-deep-blue) 25%, var(--color-stone)); }
 </style>
