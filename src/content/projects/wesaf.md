@@ -3,7 +3,10 @@ title: "Women Employment through Sustainable Access to Finance and Skill (WESAF)
 status: "completed"
 featured: true
 sectors: ["gesi", "livelihood-entrepreneurship"]
-donors: ["Women's Bank", "FCA", "Finland"]
+# "Finland" removed 2026-07: FCA is the Finnish funder; "Finland" alone
+# is a country attribution, not a distinct funder. Audit found no other
+# project with a bare country name in donors.
+donors: ["Women's Bank", "FCA"]
 municipalities: ["Tinpatan Rural Municipality", "Kamalamai Municipality", "Dudhauli Municipality"]
 startDate: 2018-01-01
 endDate: 2021-12-31
