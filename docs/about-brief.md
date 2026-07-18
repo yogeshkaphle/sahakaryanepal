@@ -62,7 +62,11 @@ The trust surface. From `governance.json`.
 | Secretary | Ms. Khem Kumari Karki | Master in Education |
 | … | … | … |
 
-Above the table, one factual summary line derived from `governance.json.composition`: "**8 of 9 executive members are women.** Chair, Secretary, and Treasurer are all women." (verbatim from `note` field).
+Above the table, one factual summary line **verbatim from the brand kit** — do not paraphrase:
+
+> **female-led — 8 of 9 executive committee members and the Executive Director are women.**
+
+Follow with the sourced note from `governance.json.note`: "Chair, Secretary, and Treasurer are all women."
 
 **Advisors** — a short bulleted list with focus area. Compact.
 
@@ -99,19 +103,12 @@ Nothing else here — just those two facts, prominently.
 
 The 19 policies from `src/content/policies/*`.
 
-Group by `category` (5 groups: financial, hr, safeguarding, governance, operational). Render each group as a heading + list of policy names. When `lastRevised` is set, render it in the provenance style beside the name. When absent, no fake date.
+**Confirmed at brief time:** every one of the 19 policies has a `category` field in its frontmatter (schema: `financial | hr | safeguarding | governance | operational`). So we use what's there — we do not invent a taxonomy.
 
-- **Financial** — Administrative & Financial Policy · Anti-Corruption Policy · Procurement Policy …
-- **HR** — Human Resource Policy · Anti-Sexual-Harassment Policy · Tele-Work Policy …
-- **Safeguarding** — Child Protection Policy · Safeguarding Policy · GESI Policy …
-- **Governance** — Complaints Handling Policy · Beneficiary Selection Guideline …
-- **Operational** — M&E Policy & Guideline · Communication Strategy · Emergency Preparedness … · Capacity Building Strategy · Social Mobilization Strategy · Partnership Policy · Office Management Policy · Strategic Plan 2023–2027
-
-Do **not** hardcode which policies fall in which group — read `category` from each policy's frontmatter. If any policy has an unexpected `category`, render it under a "Other" group and log `[NEEDS ORG]` in an HTML comment.
-
-Downloads: if any policy has a `file:` field, link the name to that PDF. Currently 0/19 do — render text-only, no fake links.
-
-Order within each group: alphabetical by `name`.
+- Group policies by their frontmatter `category`. Section headings are the category labels in that order. Alphabetical by `name` within each group.
+- If any policy has a `category` outside the schema enum (won't happen while the schema holds, but guard against future drift), render it under an "Other" group and log `[NEEDS ORG]` in an HTML comment.
+- When `lastRevised` is set (currently on 9/19), render it in the provenance style beside the name. When absent, no fake date.
+- Downloads: link the policy name to the PDF only when `file:` is set on that policy (currently 0/19). Otherwise text-only, no fake links.
 
 ### 7. Contact
 
@@ -125,19 +122,26 @@ From `org.json.contact`. Compact block:
 
 ### 8. Structured data
 
-The unusual entry on this page. Emit a `<script type="application/ld+json">` block with:
+The AI-search + donor-verification anchor. Emit a `<script type="application/ld+json">` block, **scoped tight** — identity graphs that name third parties without documented consent are a safeguarding problem, not a technical decision.
+
+Emit exactly:
 
 - `@context: https://schema.org`
 - `@type: NGO`
-- `name`, `alternateName` (Sindhuli localism), `foundingDate: 2004`
-- `address` (PostalAddress), `email`, `telephone` (array)
+- `name`, `alternateName` (Sindhuli localism)
+- `foundingDate: "2004"`
+- `address` — `PostalAddress` from `org.json.contact.address`
+- `email`, `telephone` (array from `org.json.contact.tel`)
 - `url`, `sameAs: [facebook]`
-- `numberOfEmployees` / `member` — from composition
-- `award` / `hasCredential` — the registration IDs (as `identifier: [{propertyID: "DUNS", value: "..."}, {propertyID: "PAN", value: "..."}, ...]`)
-- `funder` — array of partner names from `src/content/partners/*`
-- Nested `subOrganization` — Executive Committee (Person entities with `jobTitle`, `honorificPrefix: "Ms."/"Mr."`)
+- `identifier[]` — the 7 registration IDs (`{propertyID: "DUNS", value: "..."}` etc.) from `org.json.registration`
 
-This is the AI-search + donor-verification anchor. Reuse the JSON-LD approach already in `BaseHead.astro`.
+**Explicitly NOT emitted, and why** — log each as `[NEEDS ORG]` in an HTML comment beside the JSON-LD:
+
+- `funder` (partner names) — publishing partner identities in structured data ties identity graphs without documented consent from the funders. Safeguarding decision belongs to the ED/board.
+- `subOrganization` / `member` (Executive Committee `Person` entities) — putting identified individuals with `jobTitle` and `honorificPrefix` into schema.org knowledge graphs is a personal-data publication decision, not a build decision.
+- `numberOfEmployees` — org composition figures likewise held pending explicit sign-off.
+
+Reuse the JSON-LD approach already in `BaseHead.astro` for consistency of tag emission.
 
 ### 9. Closing CTA
 
@@ -175,7 +179,7 @@ Anticipated `[NEEDS ORG]` before build:
 
 - **`emailNote`** — gmail vs org-domain email (already flagged in `org.json`).
 - **Advisor detail** — `governance.json.advisors[].focus` is only ~1 line each; no bios. Render what exists; do not pad.
-- **Policy `lastRevised`** — currently absent on all 19; render name-only, no fake dates.
+- **Policy `lastRevised`** — set on 9/19; render the year in provenance style beside those. The other 10 render name-only, no fake dates.
 - **Policy PDFs** — currently no `file:` on any policy. Names render as plain text until PDFs land.
 - **General Assembly cadence** — org.json shows only the last GA; if the constitution mandates an interval, we don't render it (unknown).
 - **Trustee/founder names** — not in current data. Do not add.
