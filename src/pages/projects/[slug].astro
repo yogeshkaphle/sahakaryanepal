@@ -51,7 +51,11 @@ const duration =
       ? `${fmt(d.startDate)} – ${fmt(d.endDate)}`
       : `Since ${fmt(d.startDate)}`;
 
-// Related — same sector OR same donor, scored, top 3
+// Related projects — the traceability web.
+// Scoring: sector overlap and donor overlap each count double (they're the
+// two facets a donor is most likely tracing), municipality overlap counts
+// single. Projects with zero overlap are excluded. Ties break by most recent
+// startDate so newer work surfaces first. Top 3 render as compact rows.
 const allProjects = await getCollection('projects');
 const related = allProjects
   .filter((p) => p.id !== project.id)
