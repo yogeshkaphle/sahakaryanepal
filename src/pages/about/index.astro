@@ -1,0 +1,333 @@
+---
+// About / Governance / Registration — the due-diligence primary source.
+// Every value sourced from src/data/{governance,org,impact}.json and
+// src/content/policies. No content invented; no photos; zero client JS.
+// See docs/about-brief.md.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/SectionHeader.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import governance from '../../data/governance.json';
+import org from '../../data/org.json';
+import impact from '../../data/impact.json';
+
+// Policies grouped by their existing frontmatter `category`. Schema enum:
+// financial | hr | safeguarding | governance | operational. Every policy
+// carries this field; we use what is authored — we do not invent a taxonomy.
+const policies = await getCollection('policies');
+const policyGroupOrder = [
+  { id: 'financial', label: 'Financial' },
+  { id: 'hr', label: 'Human resources' },
+  { id: 'safeguarding', label: 'Safeguarding' },
+  { id: 'governance', label: 'Governance' },
+  { id: 'operational', label: 'Operational' },
+] as const;
+type Cat = (typeof policyGroupOrder)[number]['id'];
+const policyGroups = policyGroupOrder.map((g) => ({
+  ...g,
+  items: policies
+    .filter((p) => p.data.category === g.id)
+    .sort((a, b) => a.data.name.localeCompare(b.data.name)),
+}));
+// Guard the "unexpected category" branch (would show up here if the schema
+// ever drifts). Currently empty by construction.
+const otherPolicies = policies.filter(
+  (p) => !policyGroupOrder.some((g) => g.id === (p.data.category as Cat)),
+);
+
+// Registration IDs — long-form registry labels for the human table + short
+// propertyID codes for the JSON-LD identifier[] block below.
+const reg = org.registration;
+const registrationRows = [
+  { registry: 'District Administration Office, Sindhuli', id: reg.daoSindhuli, propertyID: 'DAO-Sindhuli' },
+  { registry: 'Social Welfare Council', id: reg.swc, propertyID: 'SWC' },
+  { registry: 'NGO Federation of Nepal', id: reg.ngoFederation, propertyID: 'NGO-Federation-Nepal' },
+  { registry: 'PAN (Nepal)', id: reg.pan, propertyID: 'PAN' },
+  { registry: 'DUNS', id: reg.duns, propertyID: 'DUNS' },
+  { registry: 'NCAGE', id: reg.ncage, propertyID: 'NCAGE' },
+  { registry: 'EuropeAid PADOR', id: reg.europeAidPador, propertyID: 'EuropeAid-PADOR' },
+];
+
+// JSON-LD: BaseHead already emits the site-wide NGO block (with identifier[]
+// for the 7 registration IDs, no funder/subOrganization/member — the same
+// safeguarding scope this brief calls for). Deliberately NOT emitting a
+// second NGO block here to avoid two @type=NGO entities on one page. The
+// [NEEDS ORG] comments beside the JSON-LD comment in the body still stand
+// as the audit trail of what was intentionally left out.
+
+const pageTitle = 'About Sahakarya Nepal — governance, registration & audit';
+const pageDescription =
+  'Sahakarya Nepal is a female-led development NGO in Sindhuli, Nepal, established 2004. Registration numbers, executive committee, most recent audit, and policy list.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  {/* Structured data: BaseHead emits the site-wide NGO block (@type=NGO,
+      identifier[] for the 7 registration IDs, sameAs, address, contact).
+      This page deliberately does NOT emit a second NGO tag — a page with two
+      @type=NGO entities is ambiguous to consumers of schema.org data. */}
+  {/* [NEEDS ORG] funder (partner names) omitted from JSON-LD: identity-graph
+      publication of third parties without documented consent is a
+      safeguarding decision, not a build one. */}
+  {/* [NEEDS ORG] subOrganization / member (Executive Committee Person
+      entities) omitted: publishing identified individuals with jobTitle and
+      honorificPrefix in schema.org knowledge graphs is a personal-data
+      decision, not a build decision. */}
+  {/* [NEEDS ORG] numberOfEmployees omitted: composition figures held
+      pending explicit sign-off. */}
+
+  <section class="band-white">
+    <div class="wrap">
+      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'About', href: '/about/' }]} />
+      <SectionHeader eyebrow="ABOUT" title="Sahakarya Nepal" />
+      <p class="subhead">
+        A female-led development organization working with marginalized communities in
+        Sindhuli since 2004.
+      </p>
+    </div>
+  </section>
+
+  {/* 2. Who we are */}
+  <section class="band-stone">
+    <div class="wrap prose">
+      <h2>Who we are</h2>
+      <p>
+        Established in 2004 and rooted in Sindhuli, Sahakarya Nepal works with socially
+        deprived and economically poor communities — Dalit, Janajati, Danuwar, Mushar,
+        Majhi, women, children and youth — across seven areas of work: livelihood and
+        entrepreneurship, health and nutrition and WASH, education, gender equality and
+        social inclusion, disaster risk reduction, good governance, and climate change.
+      </p>
+      <p>
+        <strong>50 projects delivered in Sindhuli since 2004; {impact.headline.figure}{' '}
+        households (≈{impact.headline.approxPeople} people) directly reached.</strong>
+      </p>
+    </div>
+  </section>
+
+  {/* 3. Governance */}
+  <section class="band-white">
+    <div class="wrap">
+      <SectionHeader eyebrow="GOVERNANCE" title="How we are governed" />
+
+      <h3 class="sub-heading">Executive Director</h3>
+      <div class="ed-card">
+        <p class="ed-name">{governance.executiveDirector.name}</p>
+        <p class="provenance">
+          {governance.executiveDirector.qualification} · {governance.executiveDirector.experienceYears} years experience
+        </p>
+        <p class="ed-expertise">{governance.executiveDirector.expertise}</p>
+      </div>
+
+      <h3 class="sub-heading" id="exec-heading">Executive Committee</h3>
+      <p class="lede">
+        <strong>Female-led — 8 of 9 executive committee members and the Executive Director are women.</strong>
+      </p>
+      <p class="lede-note">{governance.note.replace(/^Female-led:\s*[^.]*\.\s*/, '')}</p>
+      <table class="data-table" aria-labelledby="exec-heading">
+        <thead>
+          <tr><th scope="col">Role</th><th scope="col">Name</th><th scope="col">Qualification</th></tr>
+        </thead>
+        <tbody>
+          {governance.executiveCommittee.map((m) => (
+            <tr>
+              <td>{m.role}</td>
+              <td>{m.name}</td>
+              <td>{m.qualification}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 class="sub-heading" id="advisors-heading">Advisors</h3>
+      <ul class="advisors" aria-labelledby="advisors-heading">
+        {governance.advisors.map((a) => (
+          <li><span class="advisor-name">{a.name}</span> <span class="provenance">— {a.focus}</span></li>
+        ))}
+      </ul>
+
+      <h3 class="sub-heading">General membership</h3>
+      <p class="provenance">
+        Total members: {governance.composition.totalMembers}
+        ({governance.composition.femaleTotal} female,
+        {governance.composition.maleTotal} male).
+        {' '}{governance.composition.lifeMembers} life members,
+        {' '}{governance.composition.generalMembers} general members.
+      </p>
+    </div>
+  </section>
+
+  {/* 4. Registration & legal status */}
+  <section class="band-stone">
+    <div class="wrap">
+      <SectionHeader eyebrow="REGISTRATION" title="Legal registration" />
+      <div class="reg-panel" aria-labelledby="reg-heading">
+        <h3 id="reg-heading" class="visually-hidden">Registration IDs</h3>
+        <dl>
+          {registrationRows.map((r) => (
+            <div class="reg-row">
+              <dt>{r.registry}</dt>
+              <dd>{r.id}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  {/* 5. Governance dates */}
+  <section class="band-white">
+    <div class="wrap">
+      <SectionHeader eyebrow="ON THE RECORD" title="Governance dates" />
+      <div class="dates">
+        <p class="date-line"><span class="date-label">Most recent audit</span><span class="date-value">{org.governanceDates.recentAudit}</span></p>
+        <p class="date-line"><span class="date-label">Last General Assembly</span><span class="date-value">{org.governanceDates.lastGeneralAssembly}</span></p>
+      </div>
+    </div>
+  </section>
+
+  {/* 6. Policies & guidelines */}
+  <section class="band-stone">
+    <div class="wrap">
+      <SectionHeader eyebrow="POLICIES" title="Policies & guidelines" />
+      <p class="lede">{policies.length} policies and guidelines govern how the organization operates.</p>
+      <div class="policy-groups">
+        {policyGroups.map((g) => (
+          g.items.length > 0 && (
+            <div class="policy-group" aria-labelledby={`pgh-${g.id}`}>
+              <h3 id={`pgh-${g.id}`} class="group-heading">{g.label} <span class="group-count">({g.items.length})</span></h3>
+              <ul>
+                {g.items.map((p) => (
+                  <li>
+                    {p.data.file
+                      ? <a href={p.data.file}>{p.data.name}</a>
+                      : <span>{p.data.name}</span>
+                    }
+                    {p.data.lastRevised && (
+                      <span class="provenance"> · revised {p.data.lastRevised} BS</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        ))}
+        {otherPolicies.length > 0 && (
+          <div class="policy-group">
+            {/* [NEEDS ORG] policy category outside the schema enum — investigate before shipping. */}
+            <h3 class="group-heading">Other <span class="group-count">({otherPolicies.length})</span></h3>
+            <ul>{otherPolicies.map((p) => <li>{p.data.name}</li>)}</ul>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  {/* 7. Contact */}
+  <section class="band-white">
+    <div class="wrap">
+      <SectionHeader eyebrow="CONTACT" title="Get in touch" />
+      <address class="contact-block">
+        <p class="contact-line"><span class="contact-label">Address</span><span>{org.contact.address}</span></p>
+        <p class="contact-line"><span class="contact-label">Phone</span>
+          <span>{org.contact.tel.join(' · ')}</span>
+        </p>
+        <p class="contact-line"><span class="contact-label">Email</span>
+          <a href={`mailto:${org.contact.email}`}>{org.contact.email}</a>
+        </p>
+        {/* [NEEDS ORG] {org.emailNote} — gmail is on-record but an
+            org-domain email reads better to donors. Confirm before launch. */}
+        <p class="contact-line"><span class="contact-label">Website</span>
+          <a href={org.contact.website}>{org.contact.website.replace(/^https?:\/\/(www\.)?/, '')}</a>
+        </p>
+        <p class="contact-line"><span class="contact-label">Facebook</span>
+          <a href={org.contact.facebook}>{org.contact.facebook.replace(/^https?:\/\/(www\.)?/, '')}</a>
+        </p>
+      </address>
+    </div>
+  </section>
+
+  {/* 9. Closing CTAs — quiet Deep Blue text, no marigold on this page. */}
+  <section class="band-stone">
+    <div class="wrap">
+      <p class="closing"><a href="/projects/"><strong>Verify our record</strong> → /projects/</a></p>
+      <p class="closing"><a href="/reports/"><strong>Read our reports</strong> → /reports/</a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .wrap { margin-inline: auto; max-width: 68rem; padding-inline: 1rem; }
+  section { padding-block: clamp(3rem, 6vw, 4.5rem); }
+  .band-white { background: var(--color-white); }
+  .band-stone { background: var(--color-stone); }
+
+  .subhead {
+    color: var(--color-slate);
+    font-size: clamp(1rem, 2vw, 1.0625rem);
+    line-height: 1.6;
+    margin-top: 1rem;
+    max-width: 60ch;
+  }
+
+  .prose h2 { color: var(--color-ink); font-size: clamp(1.75rem, 5vw, 2.25rem); font-weight: var(--weight-heading); line-height: 1.15; max-width: 20ch; }
+  .prose p { color: var(--color-ink); line-height: 1.6; margin-top: 1rem; max-width: 68ch; }
+
+  h2 { color: var(--color-ink); font-size: clamp(1.75rem, 5vw, 2.25rem); font-weight: var(--weight-heading); line-height: 1.15; }
+  .sub-heading { color: var(--color-hill-green); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; margin-top: 2.5rem; text-transform: uppercase; }
+  .sub-heading:first-of-type { margin-top: 2rem; }
+  .lede { color: var(--color-ink); font-size: 1.05rem; line-height: 1.5; margin-top: 0.5rem; max-width: 68ch; }
+  .lede-note { color: var(--color-slate); font-size: 0.9rem; line-height: 1.5; margin-top: 0.4rem; max-width: 68ch; }
+  .provenance { color: var(--color-slate); font-size: 0.85rem; font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); }
+
+  /* ED card — compact record block */
+  .ed-card { background: var(--color-white); border: 1px solid var(--color-stone); border-radius: 0.75rem; margin-top: 1rem; padding: 1.25rem; max-width: 60ch; }
+  .ed-name { color: var(--color-ink); font-size: 1.15rem; font-weight: 600; }
+  .ed-expertise { color: var(--color-ink); font-size: 0.95rem; line-height: 1.5; margin-top: 0.75rem; }
+
+  /* Data table (executive committee) */
+  .data-table { border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 1rem; width: 100%; }
+  .data-table th, .data-table td { border-block-end: 1px solid var(--color-stone); padding: 0.75rem 0.5rem; text-align: start; vertical-align: top; }
+  .data-table th { color: var(--color-slate); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .data-table td { color: var(--color-ink); line-height: 1.5; }
+
+  .advisors { list-style: none; margin-top: 1rem; padding: 0; }
+  .advisors li { color: var(--color-ink); line-height: 1.6; margin-block: 0.4rem; max-width: 80ch; }
+  .advisor-name { font-weight: var(--weight-medium); }
+
+  /* Registration panel — bordered Stone, one row per ID */
+  .reg-panel { background: var(--color-white); border: 1px solid color-mix(in srgb, var(--color-slate) 15%, var(--color-stone)); border-radius: 1rem; margin-top: 2rem; padding: 1.5rem; }
+  .reg-panel dl { display: grid; gap: 0.75rem; margin: 0; }
+  .reg-row { align-items: baseline; border-block-end: 1px solid var(--color-stone); display: grid; gap: 0.5rem 1.25rem; padding-block-end: 0.75rem; }
+  .reg-row:last-child { border-block-end: 0; padding-block-end: 0; }
+  .reg-row dt { color: var(--color-slate); font-size: 0.85rem; font-weight: var(--weight-medium); }
+  .reg-row dd { color: var(--color-ink); font-variant-numeric: tabular-nums; font-weight: var(--weight-medium); margin: 0; }
+  @media (min-width: 640px) { .reg-row { grid-template-columns: minmax(18rem, 1fr) 20rem; } }
+
+  /* Governance dates */
+  .dates { margin-top: 2rem; }
+  .date-line { align-items: baseline; display: grid; font-variant-numeric: tabular-nums; gap: 0.35rem 1.25rem; line-height: 1.6; padding-block: 0.5rem; }
+  .date-label { color: var(--color-slate); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .date-value { color: var(--color-ink); font-size: 1.05rem; font-weight: var(--weight-medium); }
+  @media (min-width: 640px) { .date-line { grid-template-columns: minmax(18rem, 1fr) 20rem; } }
+
+  /* Policies */
+  .policy-groups { display: grid; gap: 2.25rem; margin-top: 2rem; }
+  .group-heading { color: var(--color-hill-green); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .group-count { color: var(--color-slate); }
+  .policy-group ul { display: grid; gap: 0.4rem; list-style: none; margin-top: 0.75rem; padding: 0; }
+  .policy-group li { color: var(--color-ink); line-height: 1.5; }
+  .policy-group a { color: var(--color-deep-blue); text-underline-offset: 0.18em; }
+
+  /* Contact */
+  .contact-block { font-style: normal; margin-top: 2rem; }
+  .contact-line { align-items: baseline; display: grid; font-variant-numeric: tabular-nums; gap: 0.35rem 1.25rem; line-height: 1.6; padding-block: 0.5rem; }
+  .contact-label { color: var(--color-slate); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .contact-line a { color: var(--color-deep-blue); text-underline-offset: 0.18em; }
+  @media (min-width: 640px) { .contact-line { grid-template-columns: minmax(10rem, 1fr) minmax(20rem, 3fr); } }
+
+  /* Closing */
+  .closing { line-height: 1.6; margin-block: 0.5rem; }
+  .closing a { color: var(--color-deep-blue); text-underline-offset: 0.18em; }
+
+  .visually-hidden { border: 0; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }
+</style>
