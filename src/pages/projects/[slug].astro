@@ -7,8 +7,6 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import SectorTag from '../../components/SectorTag.astro';
 import StatusPill from '../../components/StatusPill.astro';
 import ProjectRow from '../../components/ProjectRow.astro';
-import FieldPhoto from '../../components/FieldPhoto.astro';
-import { projectPhotos } from '../../data/projectPhotos';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -77,9 +75,6 @@ const relatedProv = (rd: typeof d) =>
 
 const description = d.summary;
 const pageTitle = `${d.title} — Sahakarya Nepal`;
-
-// Field photos for this project (org-captioned; only some projects have them).
-const fieldPhotos = projectPhotos[project.id] ?? [];
 
 // Sector filter link on /projects/
 const filterHref = (kind: string, value: string) =>
@@ -213,16 +208,6 @@ const filterHref = (kind: string, value: string) =>
         </section>
       )}
 
-      {/* From the field — real report photos, org's printed captions. */}
-      {fieldPhotos.length > 0 && (
-        <section class="field-photos" aria-labelledby="photos-heading">
-          <h2 id="photos-heading">From the field</h2>
-          <div class="photo-grid">
-            {fieldPhotos.map((p) => <FieldPhoto src={p.src} alt={p.alt} caption={p.caption} />)}
-          </div>
-        </section>
-      )}
-
       {/* Related — cross-linking is the traceability web. */}
       {related.length > 0 && (
         <section class="related" aria-labelledby="rel-heading">
@@ -309,9 +294,6 @@ const filterHref = (kind: string, value: string) =>
   }
   .factual-list { color: var(--color-ink); line-height: 1.6; margin-top: 1rem; padding-inline-start: 1.25rem; }
   .factual-list li { margin-block: 0.35rem; }
-
-  .photo-grid { display: grid; gap: 1.5rem; margin-top: 1rem; }
-  @media (min-width: 680px) { .photo-grid { grid-template-columns: 1fr 1fr; } }
 
   .related-list { display: grid; margin-top: 1rem; }
 

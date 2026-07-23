@@ -10,8 +10,6 @@ import AnchorStat from '../components/AnchorStat.astro';
 import Button from '../components/Button.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import ReportRow from '../components/ReportRow.astro';
-import FieldPhoto from '../components/FieldPhoto.astro';
-import { homeProofStrip } from '../data/projectPhotos';
 import impact from '../data/impact.json';
 import org from '../data/org.json';
 
@@ -161,6 +159,9 @@ const footerLinks = [
             href={`/projects/${p.id}/`}
             featured
           />
+          /* Photos: no confident, captioned photo→project match exists in
+             src/assets/photos/ yet, so cards render text-only (no Stone block
+             forced). [NEEDS ORG: confirm photo match + consent before pairing]. */
         ))}
       </div>
       <div class="more">
@@ -169,19 +170,8 @@ const footerLinks = [
     </div>
   </section>
 
-  {/* 3b. FROM THE FIELD — real report photos, org's printed captions. Activity
-       shots only (no named-portrait close-ups). See docs/photo-provenance-map.md. */}
-  <section class="band-stone">
-    <div class="wrap">
-      <SectionHeader eyebrow="FROM THE FIELD" title="The work, on the ground" />
-      <div class="proof-strip">
-        {homeProofStrip.map((p) => <FieldPhoto src={p.src} alt={p.alt} caption={p.caption} />)}
-      </div>
-    </div>
-  </section>
-
   {/* 4. WHERE WE WORK — municipalities the projects actually name (sourced). */}
-  <section class="band-white">
+  <section class="band-stone">
     <div class="wrap">
       <SectionHeader eyebrow="WHERE WE WORK" title="Across Sindhuli District" />
       <p class="where-list">{municipalities.join(' · ')}</p>
@@ -190,7 +180,7 @@ const footerLinks = [
   </section>
 
   {/* 5. IMPACT — all figures verbatim from src/data/impact.json (org profile 2025). */}
-  <section class="band-stone">
+  <section class="band-white">
     <div class="wrap">
       <SectionHeader eyebrow="IMPACT" title="What the work adds up to" />
       <div class="impact-headline">
@@ -212,7 +202,7 @@ const footerLinks = [
   </section>
 
   {/* 6. PARTNERS — third-party trust. Names grouped by type; logos are [NEEDS ORG] (Annex 12). */}
-  <section class="band-white">
+  <section class="band-stone">
     <div class="wrap">
       <SectionHeader eyebrow="PARTNERS" title="Who funds our work" />
       <div class="partner-groups">
@@ -230,7 +220,7 @@ const footerLinks = [
   </section>
 
   {/* 7. TRANSPARENCY — pure due-diligence. Plain and factual. */}
-  <section class="band-stone">
+  <section class="band-white">
     <div class="wrap">
       <SectionHeader eyebrow="TRANSPARENCY" title="Registered, audited, on the record" />
       <p class="reg-line">{registrationLine}</p>
@@ -320,10 +310,6 @@ const footerLinks = [
   /* 3 / 5 / 6 / 7 shared */
   .record-list, .impact-grid { display: grid; gap: 1.5rem; margin-top: 2rem; }
   .more { margin-top: 2rem; }
-
-  /* 3b. From-the-field proof strip */
-  .proof-strip { display: grid; gap: 1.5rem; margin-top: 2rem; }
-  @media (min-width: 680px) { .proof-strip { grid-template-columns: repeat(3, 1fr); align-items: start; } }
 
   /* 4. Where we work */
   .where-list {
